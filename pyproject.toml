@@ -40,7 +40,9 @@ classifiers = [
     "Topic :: Utilities",
 ]
 dependencies = [
-    # Core dependencies - none required for basic functionality
+    "click>=8.0.0",
+    "rich>=13.0.0",
+    "tqdm>=4.64.0",
 ]
 
 [project.optional-dependencies]

@@ -14,6 +14,9 @@ BTR-TOOLS is a comprehensive toolkit for analyzing, repairing, and exporting dat
 - **Schema Detection**: Automatically detect field boundaries and data types
 - **Integrity Checking**: Verify file integrity and detect corruption
 - **Record Size Detection**: Automatically determine optimal record sizes
+- **Rich CLI Output**: Enhanced terminal interface with progress bars and colored output
+- **Comprehensive Testing**: Full test suite with unit, integration, and performance tests
+- **CI/CD Pipeline**: Automated testing, linting, and quality assurance
 
 ## Installation
 
@@ -23,6 +26,16 @@ BTR-TOOLS is a comprehensive toolkit for analyzing, repairing, and exporting dat
 git clone <repository-url>
 cd btrtools
 pip install -e .
+```
+
+### Development Installation
+
+For development with all testing and quality tools:
+
+```bash
+git clone <repository-url>
+cd btrtools
+pip install -e ".[dev]"
 ```
 
 ### Direct Usage
@@ -35,12 +48,18 @@ python scripts/btrtools --help
 
 ## Commands
 
+All commands support rich output with progress bars using the `--progress` or `-P` flag.
+
 ### Scan Directory
 
 Scan a directory for Btrieve files:
 
 ```bash
+# Basic scan
 btrtools scan /path/to/directory --recursive
+
+# With rich output and progress bars
+btrtools --progress scan /path/to/directory --recursive
 ```
 
 ### Analyze File
@@ -48,7 +67,11 @@ btrtools scan /path/to/directory --recursive
 Analyze a specific Btrieve file:
 
 ```bash
+# Basic analysis
 btrtools analyze file.btr --max-records 1000
+
+# With rich output
+btrtools --progress analyze file.btr --max-records 1000
 ```
 
 ### Export Data
@@ -59,8 +82,8 @@ Export Btrieve data to various formats:
 # Export to CSV
 btrtools export file.btr --format csv
 
-# Export to JSON Lines
-btrtools export file.btr --format jsonl
+# Export to JSON Lines with progress
+btrtools --progress export file.btr --format jsonl
 
 # Export to SQLite database
 btrtools export file.btr --format sqlite
@@ -75,6 +98,9 @@ Automatically detect the schema/structure of a Btrieve file:
 
 ```bash
 btrtools schema file.btr --max-records 1000
+
+# With rich table output
+btrtools --progress schema file.btr --max-records 1000
 ```
 
 ### Check Integrity
@@ -83,17 +109,48 @@ Verify file integrity and check for corruption:
 
 ```bash
 btrtools check file.btr --verbose
+
+# With progress indicators
+btrtools --progress check file.btr --verbose
 ```
 
-## Btrieve File Format
+## Rich CLI Output
 
-BTR-TOOLS works with Btrieve v5 format files, which have the following characteristics:
+BTR-TOOLS supports enhanced terminal output with progress bars, colored text, and structured tables. Enable rich output with the `--progress` or `-P` flag:
 
-- **Page Size**: 4,096 bytes (4KB)
-- **Header Size**: 16 bytes per page
-- **FCR Pages**: First 2 pages contain File Control Record information
-- **Data Pages**: Remaining pages contain record data
-- **Record Sizes**: Variable, commonly 32, 64, 128, 256, or 512 bytes
+```bash
+# Enable rich output for any command
+btrtools --progress analyze file.btr
+btrtools -P scan /data --recursive
+```
+
+### Rich Output Features
+
+- **Progress Bars**: Visual progress indicators for long-running operations
+- **Colored Output**: Success (green), warnings (yellow), errors (red)
+- **Structured Tables**: Formatted data display for analysis results
+- **Icons**: Visual indicators for different types of messages
+- **Spinners**: Activity indicators during processing
+
+### Example Rich Output
+
+```
+BTR-TOOLS - Btrieve File Analysis Toolkit
+Version 2.0.0 | Rich output enabled
+⠋ Reading file structure... ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 100% 0:00:00
+
+    Btrieve File Analysis Results    
+┏━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━┓
+┃ Property        ┃ Value           ┃
+┡━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━┩
+│ Filename        │ example.btr     │
+│ File Size       │ 4,096 bytes     │
+│ ASCII Content   │ 85.2%           │
+│ Quality Score   │ 7.8             │
+└─────────────────┴─────────────────┘
+
+✅ Operation completed successfully
+```
 
 ## Analysis Techniques
 
@@ -252,6 +309,52 @@ BTR-TOOLS is useful for:
 
 ## Development
 
+### Testing
+
+BTR-TOOLS includes a comprehensive test suite covering unit tests, integration tests, and performance benchmarks:
+
+```bash
+# Run all tests
+pytest btrtools/tests/
+
+# Run with coverage report
+pytest btrtools/tests/ --cov=btrtools --cov-report=html
+
+# Run specific test categories
+pytest btrtools/tests/test_basic.py     # Unit tests
+pytest btrtools/tests/test_cli.py       # CLI integration tests
+pytest btrtools/tests/test_performance.py  # Performance tests
+```
+
+### Code Quality
+
+The project uses multiple tools for code quality assurance:
+
+```bash
+# Format code
+black btrtools/
+isort btrtools/
+
+# Lint code
+flake8 btrtools/
+mypy btrtools/
+
+# Security scanning
+bandit -r btrtools/
+safety check
+```
+
+### CI/CD Pipeline
+
+BTR-TOOLS uses GitHub Actions for automated testing and quality assurance:
+
+- **Multi-platform testing**: Windows, macOS, Linux
+- **Python version matrix**: 3.8, 3.9, 3.10, 3.11
+- **Automated linting**: black, isort, flake8, mypy
+- **Security scanning**: bandit, safety
+- **Documentation building**: Sphinx
+- **Test coverage reporting**: pytest-cov
+
 ### Project Structure
 
 ```
@@ -268,9 +371,13 @@ btrtools/
 │   ├── schema.py        # Schema detection
 │   └── check.py         # Integrity checking
 ├── utils/
-│   └── __init__.py
+│   ├── __init__.py
+│   └── logging.py       # Logging and error handling
 └── tests/
-    └── __init__.py
+    ├── __init__.py
+    ├── test_basic.py    # Unit tests
+    ├── test_cli.py      # CLI integration tests
+    └── test_performance.py  # Performance benchmarks
 ```
 
 ### Adding New Commands
