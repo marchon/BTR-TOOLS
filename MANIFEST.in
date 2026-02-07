@@ -1,0 +1,9 @@
+include README.md
+include LICENSE
+include DebuggingInfo.md
+include pyproject.toml
+include requirements.txt
+include scripts/btrtools
+global-exclude *.pyc
+global-exclude __pycache__
+global-exclude .git*
