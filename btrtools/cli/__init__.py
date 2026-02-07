@@ -132,6 +132,11 @@ Examples:
   btrtools export file.btr --format csv  # Export data to CSV format
   btrtools compare file1.btr file2.btr   # Compare two Btrieve files
   btrtools check file.btr                # Check file integrity
+  btrtools repair file.btr --validate-only  # Validate file integrity
+  btrtools search file.btr --query "ABC"    # Search for text in records
+  btrtools report file.btr --format html   # Generate HTML analysis report
+  btrtools stats file.btr --benchmark      # Generate performance statistics
+  btrtools batch *.btr --operation export --format csv  # Batch export multiple files
 
 Debug Options:
   Set BTRTOOLS_LOG_LEVEL=DEBUG for detailed logging
@@ -142,7 +147,7 @@ Debug Options:
     parser.add_argument(
         '--version',
         action='version',
-        version='BTR-TOOLS v2.0.0'
+        version='BTR-TOOLS v2.2.0'
     )
 
     parser.add_argument(
@@ -280,6 +285,200 @@ Debug Options:
         help='Output file for comparison results (default: stdout)'
     )
 
+    # Batch command
+    batch_parser = subparsers.add_parser(
+        'batch',
+        help='Process multiple Btrieve files in batch mode'
+    )
+    batch_parser.add_argument(
+        'files',
+        nargs='+',
+        help='Btrieve files to process (supports glob patterns)'
+    )
+    batch_parser.add_argument(
+        '--operation', '-op',
+        choices=['analyze', 'export', 'schema', 'check'],
+        default='analyze',
+        help='Operation to perform on each file (default: analyze)'
+    )
+    batch_parser.add_argument(
+        '--format', '-f',
+        choices=['csv', 'jsonl', 'sqlite', 'excel'],
+        help='Export format (required when operation is export)'
+    )
+    batch_parser.add_argument(
+        '--output-dir', '-d',
+        help='Output directory for results (default: current directory)'
+    )
+    batch_parser.add_argument(
+        '--record-size', '-s',
+        type=int,
+        help='Record size (auto-detect if not specified)'
+    )
+    batch_parser.add_argument(
+        '--max-records', '-n',
+        type=int,
+        help='Maximum records to process per file'
+    )
+    batch_parser.add_argument(
+        '--parallel', '-p',
+        type=int,
+        default=1,
+        help='Number of parallel processes (default: 1)'
+    )
+
+    # Repair command
+    repair_parser = subparsers.add_parser(
+        'repair',
+        help='Validate and repair Btrieve file data integrity'
+    )
+    repair_parser.add_argument(
+        'file',
+        help='Btrieve file to repair'
+    )
+    repair_parser.add_argument(
+        '--output', '-o',
+        help='Output file for repaired data (default: <input>_repaired.btr)'
+    )
+    repair_parser.add_argument(
+        '--record-size', '-s',
+        type=int,
+        help='Record size (auto-detect if not specified)'
+    )
+    repair_parser.add_argument(
+        '--fix-corruption',
+        action='store_true',
+        help='Attempt to fix detected corruption'
+    )
+    repair_parser.add_argument(
+        '--backup',
+        action='store_true',
+        help='Create backup of original file before repair'
+    )
+    repair_parser.add_argument(
+        '--validate-only',
+        action='store_true',
+        help='Only validate, do not perform repairs'
+    )
+
+    # Search command
+    search_parser = subparsers.add_parser(
+        'search',
+        help='Search and filter Btrieve file records'
+    )
+    search_parser.add_argument(
+        'file',
+        help='Btrieve file to search'
+    )
+    search_parser.add_argument(
+        '--query', '-q',
+        help='Search query (text to find in records)'
+    )
+    search_parser.add_argument(
+        '--record-size', '-s',
+        type=int,
+        help='Record size (auto-detect if not specified)'
+    )
+    search_parser.add_argument(
+        '--max-records', '-n',
+        type=int,
+        help='Maximum records to search (default: all)'
+    )
+    search_parser.add_argument(
+        '--output', '-o',
+        help='Output file for results (default: stdout)'
+    )
+    search_parser.add_argument(
+        '--format', '-f',
+        choices=['text', 'json', 'csv'],
+        default='text',
+        help='Output format (default: text)'
+    )
+    search_parser.add_argument(
+        '--case-sensitive',
+        action='store_true',
+        help='Case-sensitive search'
+    )
+    search_parser.add_argument(
+        '--regex',
+        action='store_true',
+        help='Treat query as regular expression'
+    )
+    search_parser.add_argument(
+        '--invert-match', '-v',
+        action='store_true',
+        help='Invert match (show non-matching records)'
+    )
+
+    # Report command
+    report_parser = subparsers.add_parser(
+        'report',
+        help='Generate data visualization and analysis reports'
+    )
+    report_parser.add_argument(
+        'file',
+        help='Btrieve file to analyze'
+    )
+    report_parser.add_argument(
+        '--output', '-o',
+        help='Output directory for reports (default: ./reports)'
+    )
+    report_parser.add_argument(
+        '--record-size', '-s',
+        type=int,
+        help='Record size (auto-detect if not specified)'
+    )
+    report_parser.add_argument(
+        '--max-records', '-n',
+        type=int,
+        help='Maximum records to analyze (default: 1000)'
+    )
+    report_parser.add_argument(
+        '--format', '-f',
+        choices=['html', 'json', 'text'],
+        default='html',
+        help='Report format (default: html)'
+    )
+    report_parser.add_argument(
+        '--include-charts',
+        action='store_true',
+        help='Include data visualization charts (requires matplotlib)'
+    )
+
+    # Stats command
+    stats_parser = subparsers.add_parser(
+        'stats',
+        help='Generate performance statistics and profiling data'
+    )
+    stats_parser.add_argument(
+        'file',
+        help='Btrieve file to analyze'
+    )
+    stats_parser.add_argument(
+        '--record-size', '-s',
+        type=int,
+        help='Record size (auto-detect if not specified)'
+    )
+    stats_parser.add_argument(
+        '--max-records', '-n',
+        type=int,
+        help='Maximum records to analyze (default: 1000)'
+    )
+    stats_parser.add_argument(
+        '--output', '-o',
+        help='Output file for statistics (default: stdout)'
+    )
+    stats_parser.add_argument(
+        '--benchmark',
+        action='store_true',
+        help='Run performance benchmarks'
+    )
+    stats_parser.add_argument(
+        '--memory-profile',
+        action='store_true',
+        help='Include memory usage profiling'
+    )
+
     return parser
 
 
@@ -328,6 +527,16 @@ def main() -> int:
             exit_code = cmd_check(args, use_rich)
         elif args.command == 'compare':
             exit_code = cmd_compare(args, use_rich)
+        elif args.command == 'batch':
+            exit_code = cmd_batch(args, use_rich)
+        elif args.command == 'repair':
+            exit_code = cmd_repair(args, use_rich)
+        elif args.command == 'search':
+            exit_code = cmd_search(args, use_rich)
+        elif args.command == 'report':
+            exit_code = cmd_report(args, use_rich)
+        elif args.command == 'stats':
+            exit_code = cmd_stats(args, use_rich)
         else:
             if use_rich:
                 console.print(f"[red]Unknown command: {args.command}[/red]")
@@ -812,6 +1021,721 @@ def cmd_compare(args, use_rich: bool = False) -> int:
                 print(f"Has FCR pages: {result['has_fcr_pages']}")
                 print(f"Data pages: {result['data_pages']}")
             return 0
+
+
+def cmd_stats(args, use_rich: bool = False) -> int:
+    """Handle stats command."""
+    import time
+    import psutil
+    import os
+    
+    if use_rich:
+        console.print(f"[bold]Generating performance statistics for:[/bold] {args.file}")
+    else:
+        logger.info(f"Generating performance statistics for: {args.file}")
+    
+    try:
+        # Get initial memory usage
+        process = psutil.Process(os.getpid())
+        initial_memory = process.memory_info().rss / 1024 / 1024  # MB
+        
+        start_time = time.time()
+        
+        # Analyze the file
+        analyzer = BtrieveAnalyzer(args.file)
+        
+        # Auto-detect record size if not provided
+        if args.record_size is None:
+            record_size, _ = analyzer.detect_record_size()
+            if record_size == 0:
+                raise ValueError("Could not detect record size")
+        else:
+            record_size = args.record_size
+        
+        analysis_time = time.time() - start_time
+        
+        # Extract records
+        extract_start = time.time()
+        records = analyzer.extract_records(record_size, args.max_records or 1000)
+        extract_time = time.time() - extract_start
+        
+        # Calculate statistics
+        total_time = time.time() - start_time
+        final_memory = process.memory_info().rss / 1024 / 1024  # MB
+        memory_used = final_memory - initial_memory
+        
+        stats = {
+            'file_info': {
+                'filename': args.file,
+                'file_size': os.path.getsize(args.file),
+                'record_size': record_size,
+                'total_records': len(records)
+            },
+            'performance': {
+                'total_time_seconds': total_time,
+                'analysis_time_seconds': analysis_time,
+                'extraction_time_seconds': extract_time,
+                'records_per_second': len(records) / extract_time if extract_time > 0 else 0,
+                'memory_used_mb': memory_used,
+                'peak_memory_mb': final_memory
+            },
+            'data_quality': {
+                'avg_record_size': sum(len(r.raw_bytes) for r in records) / len(records) if records else 0,
+                'avg_printable_chars': sum(r.printable_chars for r in records) / len(records) if records else 0,
+                'records_with_text': sum(1 for r in records if r.decoded_text.strip()),
+                'records_with_digits': sum(1 for r in records if r.has_digits),
+                'records_with_alpha': sum(1 for r in records if r.has_alpha)
+            }
+        }
+        
+        # Run benchmarks if requested
+        if args.benchmark:
+            if use_rich:
+                console.print("[yellow]Running performance benchmarks...[/yellow]")
+            
+            benchmark_results = {}
+            
+            # Benchmark record extraction
+            times = []
+            for _ in range(3):
+                start = time.time()
+                analyzer.extract_records(record_size, min(100, len(records)) if records else 10)
+                times.append(time.time() - start)
+            
+            benchmark_results['extraction_avg_time'] = sum(times) / len(times)
+            benchmark_results['extraction_min_time'] = min(times)
+            benchmark_results['extraction_max_time'] = max(times)
+            
+            stats['benchmarks'] = benchmark_results
+        
+        # Output results
+        if args.output:
+            import json
+            with open(args.output, 'w') as f:
+                json.dump(stats, f, indent=2)
+            if use_rich:
+                print_success(f"Statistics written to: {args.output}", use_rich)
+            else:
+                logger.info(f"Statistics written to: {args.output}")
+        else:
+            # Console output
+            if use_rich:
+                table = Table(title="Performance Statistics")
+                table.add_column("Metric", style="cyan")
+                table.add_column("Value", style="magenta")
+                
+                table.add_row("File Size", f"{stats['file_info']['file_size']:,} bytes")
+                table.add_row("Total Records", str(stats['file_info']['total_records']))
+                table.add_row("Record Size", f"{stats['file_info']['record_size']} bytes")
+                table.add_row("Total Time", f"{stats['performance']['total_time_seconds']:.3f}s")
+                table.add_row("Analysis Time", f"{stats['performance']['analysis_time_seconds']:.3f}s")
+                table.add_row("Extraction Time", f"{stats['performance']['extraction_time_seconds']:.3f}s")
+                table.add_row("Records/Second", f"{stats['performance']['records_per_second']:.1f}")
+                table.add_row("Memory Used", f"{stats['performance']['memory_used_mb']:.1f} MB")
+                table.add_row("Avg Record Size", f"{stats['data_quality']['avg_record_size']:.1f} bytes")
+                table.add_row("Avg Printable", f"{stats['data_quality']['avg_printable_chars']:.1f} chars")
+                
+                console.print(table)
+                
+                if args.benchmark and 'benchmarks' in stats:
+                    bench_table = Table(title="Benchmark Results")
+                    bench_table.add_column("Test", style="cyan")
+                    bench_table.add_column("Avg Time", style="green")
+                    bench_table.add_column("Min Time", style="blue")
+                    bench_table.add_column("Max Time", style="red")
+                    
+                    bench_table.add_row("Record Extraction", 
+                                      f"{stats['benchmarks']['extraction_avg_time']:.4f}s",
+                                      f"{stats['benchmarks']['extraction_min_time']:.4f}s", 
+                                      f"{stats['benchmarks']['extraction_max_time']:.4f}s")
+                    
+                    console.print(bench_table)
+            else:
+                print("PERFORMANCE STATISTICS:")
+                print(f"  File: {args.file}")
+                print(f"  File Size: {stats['file_info']['file_size']:,} bytes")
+                print(f"  Total Records: {stats['file_info']['total_records']}")
+                print(f"  Total Time: {stats['performance']['total_time_seconds']:.3f}s")
+                print(f"  Records/Second: {stats['performance']['records_per_second']:.1f}")
+                print(f"  Memory Used: {stats['performance']['memory_used_mb']:.1f} MB")
+        
+        return 0
+        
+    except Exception as e:
+        if use_rich:
+            print_error(f"Statistics generation failed: {e}", use_rich)
+        else:
+            logger.error(f"Statistics generation failed: {e}")
+        return 1
+
+
+def cmd_report(args, use_rich: bool = False) -> int:
+    """Handle report command."""
+    import os
+    from pathlib import Path
+    from datetime import datetime
+    
+    output_dir = args.output or "./reports"
+    os.makedirs(output_dir, exist_ok=True)
+    
+    if use_rich:
+        console.print(f"[bold]Generating reports for:[/bold] {args.file}")
+        console.print(f"[bold]Output directory:[/bold] {output_dir}")
+    else:
+        logger.info(f"Generating reports for: {args.file}")
+    
+    try:
+        # Analyze the file
+        from btrtools.cli.analyze import analyze_file
+        from btrtools.cli.schema import detect_schema
+        
+        file_info = analyze_file(args.file)
+        schema_info = detect_schema(args.file, record_size=args.record_size, max_records=args.max_records or 1000)
+        
+        # Extract records for detailed analysis
+        analyzer = BtrieveAnalyzer(args.file)
+        if args.record_size is None:
+            record_size, _ = analyzer.detect_record_size()
+            if record_size == 0:
+                raise ValueError("Could not detect record size")
+        else:
+            record_size = args.record_size
+        
+        records = analyzer.extract_records(record_size, args.max_records or 1000)
+        
+        # Generate statistics
+        stats = {
+            'file_info': {
+                'filename': file_info.filename,
+                'file_size': file_info.file_size,
+                'page_size': file_info.page_size,
+                'ascii_percentage': file_info.ascii_percentage,
+                'digit_sequences': file_info.digit_sequences,
+                'date_patterns': file_info.date_patterns,
+                'quality_score': file_info.quality_score
+            },
+            'record_analysis': {
+                'total_records': len(records),
+                'record_size': record_size,
+                'avg_printable_chars': sum(r.printable_chars for r in records) / len(records) if records else 0,
+                'records_with_digits': sum(1 for r in records if r.has_digits),
+                'records_with_alpha': sum(1 for r in records if r.has_alpha),
+                'extracted_fields': len(schema_info.get('fields', []))
+            },
+            'field_analysis': {},
+            'generated_at': datetime.now().isoformat()
+        }
+        
+        # Analyze fields
+        if records and records[0].extracted_fields:
+            field_stats = {}
+            for field_name in records[0].extracted_fields.keys():
+                values = [r.extracted_fields.get(field_name, '') for r in records if r.extracted_fields]
+                non_empty = [v for v in values if v.strip()]
+                field_stats[field_name] = {
+                    'total_values': len(values),
+                    'non_empty_values': len(non_empty),
+                    'unique_values': len(set(non_empty)),
+                    'avg_length': sum(len(str(v)) for v in non_empty) / len(non_empty) if non_empty else 0
+                }
+            stats['field_analysis'] = field_stats
+        
+        # Generate reports based on format
+        base_name = Path(args.file).stem
+        
+        if args.format == 'json':
+            import json
+            report_file = os.path.join(output_dir, f"{base_name}_report.json")
+            with open(report_file, 'w') as f:
+                json.dump(stats, f, indent=2)
+                
+        elif args.format == 'html':
+            html_content = f"""
+<!DOCTYPE html>
+<html>
+<head>
+    <title>BTR-TOOLS Report - {base_name}</title>
+    <style>
+        body {{ font-family: Arial, sans-serif; margin: 40px; }}
+        .header {{ background: #f0f0f0; padding: 20px; border-radius: 5px; }}
+        .section {{ margin: 20px 0; }}
+        .stat {{ display: inline-block; margin: 10px; padding: 10px; background: #e8f4f8; border-radius: 3px; }}
+        table {{ border-collapse: collapse; width: 100%; }}
+        th, td {{ border: 1px solid #ddd; padding: 8px; text-align: left; }}
+        th {{ background-color: #f2f2f2; }}
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>BTR-TOOLS Analysis Report</h1>
+        <p><strong>File:</strong> {args.file}</p>
+        <p><strong>Generated:</strong> {stats['generated_at']}</p>
+    </div>
+    
+    <div class="section">
+        <h2>File Information</h2>
+        <div class="stat">Size: {stats['file_info']['file_size']:,} bytes</div>
+        <div class="stat">ASCII Content: {stats['file_info']['ascii_percentage']:.1f}%</div>
+        <div class="stat">Quality Score: {stats['file_info']['quality_score']:.2f}</div>
+    </div>
+    
+    <div class="section">
+        <h2>Record Analysis</h2>
+        <div class="stat">Total Records: {stats['record_analysis']['total_records']}</div>
+        <div class="stat">Record Size: {stats['record_analysis']['record_size']} bytes</div>
+        <div class="stat">Avg Printable: {stats['record_analysis']['avg_printable_chars']:.1f} chars</div>
+        <div class="stat">With Digits: {stats['record_analysis']['records_with_digits']}</div>
+        <div class="stat">With Alpha: {stats['record_analysis']['records_with_alpha']}</div>
+    </div>
+    
+    <div class="section">
+        <h2>Field Analysis</h2>
+        <table>
+            <tr><th>Field Name</th><th>Total Values</th><th>Non-Empty</th><th>Unique</th><th>Avg Length</th></tr>
+"""
+            for field_name, field_data in stats['field_analysis'].items():
+                html_content += f"""
+            <tr>
+                <td>{field_name}</td>
+                <td>{field_data['total_values']}</td>
+                <td>{field_data['non_empty_values']}</td>
+                <td>{field_data['unique_values']}</td>
+                <td>{field_data['avg_length']:.1f}</td>
+            </tr>"""
+            html_content += """
+        </table>
+    </div>
+</body>
+</html>"""
+            
+            report_file = os.path.join(output_dir, f"{base_name}_report.html")
+            with open(report_file, 'w') as f:
+                f.write(html_content)
+                
+        else:  # text format
+            report_file = os.path.join(output_dir, f"{base_name}_report.txt")
+            with open(report_file, 'w') as f:
+                f.write(f"BTR-TOOLS Analysis Report\n")
+                f.write(f"File: {args.file}\n")
+                f.write(f"Generated: {stats['generated_at']}\n\n")
+                
+                f.write("FILE INFORMATION:\n")
+                f.write(f"  Size: {stats['file_info']['file_size']:,} bytes\n")
+                f.write(f"  ASCII Content: {stats['file_info']['ascii_percentage']:.1f}%\n")
+                f.write(f"  Quality Score: {stats['file_info']['quality_score']:.2f}\n\n")
+                
+                f.write("RECORD ANALYSIS:\n")
+                f.write(f"  Total Records: {stats['record_analysis']['total_records']}\n")
+                f.write(f"  Record Size: {stats['record_analysis']['record_size']} bytes\n")
+                f.write(f"  Avg Printable: {stats['record_analysis']['avg_printable_chars']:.1f} chars\n")
+                f.write(f"  Records with Digits: {stats['record_analysis']['records_with_digits']}\n")
+                f.write(f"  Records with Alpha: {stats['record_analysis']['records_with_alpha']}\n\n")
+                
+                if stats['field_analysis']:
+                    f.write("FIELD ANALYSIS:\n")
+                    for field_name, field_data in stats['field_analysis'].items():
+                        f.write(f"  {field_name}:\n")
+                        f.write(f"    Total Values: {field_data['total_values']}\n")
+                        f.write(f"    Non-Empty: {field_data['non_empty_values']}\n")
+                        f.write(f"    Unique: {field_data['unique_values']}\n")
+                        f.write(f"    Avg Length: {field_data['avg_length']:.1f}\n")
+        
+        if use_rich:
+            print_success(f"Report generated: {report_file}", use_rich)
+        else:
+            logger.info(f"Report generated: {report_file}")
+        
+        return 0
+        
+    except Exception as e:
+        if use_rich:
+            print_error(f"Report generation failed: {e}", use_rich)
+        else:
+            logger.error(f"Report generation failed: {e}")
+        return 1
+
+
+def cmd_search(args, use_rich: bool = False) -> int:
+    """Handle search command."""
+    import re
+    import csv
+    import json
+    
+    if not args.query:
+        if use_rich:
+            print_error("Search query is required. Use --query or -q option.", use_rich)
+        else:
+            logger.error("Search query is required")
+        return 1
+    
+    if use_rich:
+        console.print(f"[bold]Searching Btrieve file:[/bold] {args.file}")
+        console.print(f"[bold]Query:[/bold] {args.query}")
+    else:
+        logger.info(f"Searching Btrieve file: {args.file} for query: {args.query}")
+    
+    try:
+        analyzer = BtrieveAnalyzer(args.file)
+        
+        # Auto-detect record size if not provided
+        if args.record_size is None:
+            record_size, _ = analyzer.detect_record_size()
+            if record_size == 0:
+                raise ValueError("Could not detect record size")
+        else:
+            record_size = args.record_size
+        
+        # Extract records
+        records = analyzer.extract_records(record_size, args.max_records)
+        
+        if not records:
+            if use_rich:
+                print_warning("No records found to search", use_rich)
+            else:
+                logger.warning("No records found to search")
+            return 1
+        
+        # Prepare search function
+        if args.regex:
+            flags = 0 if args.case_sensitive else re.IGNORECASE
+            search_pattern = re.compile(args.query, flags)
+            def matches_query(record):
+                return bool(search_pattern.search(record.decoded_text))
+        else:
+            query = args.query if args.case_sensitive else args.query.lower()
+            def matches_query(record):
+                text = record.decoded_text if args.case_sensitive else record.decoded_text.lower()
+                return query in text
+        
+        # Apply inversion if requested
+        if args.invert_match:
+            original_matches = matches_query
+            matches_query = lambda r: not original_matches(r)
+        
+        # Filter records
+        matching_records = [r for r in records if matches_query(r)]
+        
+        if use_rich:
+            console.print(f"[bold]Results:[/bold] {len(matching_records)}/{len(records)} records matched")
+        else:
+            logger.info(f"Found {len(matching_records)}/{len(records)} matching records")
+        
+        # Output results
+        if args.output:
+            with open(args.output, 'w', encoding='utf-8') as f:
+                if args.format == 'json':
+                    json.dump([{
+                        'record_num': r.record_num,
+                        'record_size': r.record_size,
+                        'decoded_text': r.decoded_text,
+                        'printable_chars': r.printable_chars,
+                        'has_digits': r.has_digits,
+                        'has_alpha': r.has_alpha,
+                        'extracted_fields': r.extracted_fields
+                    } for r in matching_records], f, indent=2)
+                elif args.format == 'csv':
+                    if matching_records:
+                        writer = csv.writer(f)
+                        # Write header
+                        fieldnames = ['record_num', 'record_size', 'decoded_text', 'printable_chars', 'has_digits', 'has_alpha']
+                        if matching_records[0].extracted_fields:
+                            fieldnames.extend(sorted(matching_records[0].extracted_fields.keys()))
+                        writer.writerow(fieldnames)
+                        # Write data
+                        for r in matching_records:
+                            row = [r.record_num, r.record_size, r.decoded_text, r.printable_chars, r.has_digits, r.has_alpha]
+                            if r.extracted_fields:
+                                row.extend(r.extracted_fields.get(field, '') for field in sorted(matching_records[0].extracted_fields.keys()))
+                            writer.writerow(row)
+                else:  # text format
+                    f.write(f"Search results for query: {args.query}\n")
+                    f.write(f"Total records searched: {len(records)}\n")
+                    f.write(f"Matching records: {len(matching_records)}\n\n")
+                    for r in matching_records:
+                        f.write(f"Record {r.record_num}:\n")
+                        f.write(f"  Text: {r.decoded_text}\n")
+                        if r.extracted_fields:
+                            f.write(f"  Fields: {r.extracted_fields}\n")
+                        f.write("\n")
+        else:
+            # Console output
+            if use_rich and matching_records:
+                table = Table(title=f"Search Results ({len(matching_records)} matches)")
+                table.add_column("Record #", style="cyan", no_wrap=True)
+                table.add_column("Text", style="magenta")
+                table.add_column("Fields", style="green")
+                
+                for r in matching_records[:20]:  # Limit display to first 20
+                    fields_str = ", ".join(f"{k}={v}" for k, v in r.extracted_fields.items()) if r.extracted_fields else ""
+                    table.add_row(str(r.record_num), r.decoded_text[:50] + "..." if len(r.decoded_text) > 50 else r.decoded_text, fields_str)
+                
+                if len(matching_records) > 20:
+                    table.add_row("...", f"... and {len(matching_records) - 20} more matches", "")
+                
+                console.print(table)
+            elif matching_records:
+                print(f"Found {len(matching_records)} matching records:")
+                for r in matching_records[:10]:  # Limit to first 10
+                    print(f"Record {r.record_num}: {r.decoded_text[:100]}...")
+                if len(matching_records) > 10:
+                    print(f"... and {len(matching_records) - 10} more matches")
+            else:
+                if use_rich:
+                    print_warning("No records matched the search query", use_rich)
+                else:
+                    print("No records matched the search query")
+        
+        return 0
+        
+    except Exception as e:
+        if use_rich:
+            print_error(f"Search failed: {e}", use_rich)
+        else:
+            logger.error(f"Search failed: {e}")
+        return 1
+
+
+def cmd_repair(args, use_rich: bool = False) -> int:
+    """Handle repair command."""
+    from pathlib import Path
+    
+    if use_rich:
+        console.print(f"[bold]Repairing Btrieve file:[/bold] {args.file}")
+    else:
+        logger.info(f"Repairing Btrieve file: {args.file}")
+    
+    # Create backup if requested
+    if args.backup:
+        backup_file = f"{args.file}.backup"
+        try:
+            import shutil
+            shutil.copy2(args.file, backup_file)
+            if use_rich:
+                print_success(f"Backup created: {backup_file}", use_rich)
+            else:
+                logger.info(f"Backup created: {backup_file}")
+        except Exception as e:
+            if use_rich:
+                print_error(f"Failed to create backup: {e}", use_rich)
+            else:
+                logger.error(f"Failed to create backup: {e}")
+            return 1
+    
+    # Determine output file
+    if args.output:
+        output_file = args.output
+    else:
+        stem = Path(args.file).stem
+        output_file = f"{stem}_repaired.btr"
+    
+    # Perform integrity check first
+    from btrtools.cli.check import check_integrity
+    integrity_result = check_integrity(args.file)
+    
+    if use_rich:
+        display_integrity_results_rich(integrity_result)
+    else:
+        if integrity_result.get('corruption_detected', False):
+            print("INTEGRITY ISSUES DETECTED:")
+            for detail in integrity_result.get('corruption_details', []):
+                print(f"  - {detail}")
+        else:
+            print("File integrity check passed.")
+    
+    if args.validate_only:
+        return 0 if not integrity_result.get('corruption_detected', False) else 1
+    
+    # If no corruption detected, just copy the file
+    if not integrity_result.get('corruption_detected', False):
+        if use_rich:
+            print_info("No corruption detected, copying file as-is", use_rich)
+        try:
+            import shutil
+            shutil.copy2(args.file, output_file)
+            if use_rich:
+                print_success(f"File copied to: {output_file}", use_rich)
+            else:
+                logger.info(f"File copied to: {output_file}")
+            return 0
+        except Exception as e:
+            if use_rich:
+                print_error(f"Failed to copy file: {e}", use_rich)
+            else:
+                logger.error(f"Failed to copy file: {e}")
+            return 1
+    
+    # Attempt repairs if corruption detected and fix_corruption is enabled
+    if not args.fix_corruption:
+        if use_rich:
+            print_warning("Corruption detected but --fix-corruption not specified. Use --fix-corruption to attempt repairs.", use_rich)
+        else:
+            logger.warning("Corruption detected but --fix-corruption not specified")
+        return 1
+    
+    if use_rich:
+        console.print("[yellow]Attempting to repair corrupted file...[/yellow]")
+    else:
+        logger.info("Attempting to repair corrupted file")
+    
+    try:
+        # Basic repair: try to extract valid records and rebuild the file
+        analyzer = BtrieveAnalyzer(args.file)
+        
+        # Auto-detect record size if not provided
+        if args.record_size is None:
+            record_size, _ = analyzer.detect_record_size()
+            if record_size == 0:
+                raise ValueError("Could not detect record size")
+        else:
+            record_size = args.record_size
+        
+        # Extract records
+        records = analyzer.extract_records(record_size)
+        
+        if not records:
+            raise ValueError("No valid records could be extracted from corrupted file")
+        
+        # Rebuild the file with valid records
+        fcr_data = b'\x00' * (analyzer.FCR_PAGES * analyzer.PAGE_SIZE)
+        record_data = b''.join(record.raw_bytes for record in records)
+        
+        with open(output_file, 'wb') as f:
+            f.write(fcr_data)
+            f.write(record_data)
+        
+        if use_rich:
+            print_success(f"Repaired file created: {output_file}", use_rich)
+            print_info(f"Extracted {len(records)} valid records", use_rich)
+        else:
+            logger.info(f"Repaired file created: {output_file}")
+            logger.info(f"Extracted {len(records)} valid records")
+        
+        return 0
+        
+    except Exception as e:
+        if use_rich:
+            print_error(f"Repair failed: {e}", use_rich)
+        else:
+            logger.error(f"Repair failed: {e}")
+        return 1
+
+
+def cmd_batch(args, use_rich: bool = False) -> int:
+    """Handle batch command."""
+    import glob
+    import concurrent.futures
+    from pathlib import Path
+    
+    # Expand glob patterns
+    all_files = []
+    for pattern in args.files:
+        expanded = glob.glob(pattern)
+        if not expanded:
+            # If glob didn't match, treat as literal filename
+            expanded = [pattern]
+        all_files.extend(expanded)
+    
+    # Remove duplicates and filter for existing files
+    all_files = list(set(all_files))
+    valid_files = [f for f in all_files if os.path.isfile(f)]
+    
+    if not valid_files:
+        if use_rich:
+            print_error("No valid files found to process", use_rich)
+        else:
+            logger.error("No valid files found to process")
+        return 1
+    
+    if use_rich:
+        console.print(f"[bold]Batch processing {len(valid_files)} files[/bold]")
+        console.print(f"Operation: {args.operation}")
+        if args.format:
+            console.print(f"Format: {args.format}")
+    else:
+        logger.info(f"Batch processing {len(valid_files)} files with operation: {args.operation}")
+    
+    # Create output directory if specified
+    output_dir = args.output_dir or "."
+    os.makedirs(output_dir, exist_ok=True)
+    
+    # Function to process a single file
+    def process_file(filepath: str) -> dict:
+        try:
+            result = {"file": filepath, "success": False, "error": None, "output": None}
+            
+            if args.operation == 'analyze':
+                from btrtools.cli.analyze import analyze_file
+                file_info = analyze_file(filepath)
+                result["success"] = True
+                result["output"] = file_info
+                
+            elif args.operation == 'export':
+                if not args.format:
+                    result["error"] = "Format required for export operation"
+                    return result
+                from btrtools.cli.export import export_file
+                output_file = os.path.join(output_dir, 
+                    f"{Path(filepath).stem}.{args.format if args.format != 'sqlite' else 'db'}")
+                exported_file = export_file(filepath, args.format, 
+                                          record_size=args.record_size,
+                                          max_records=args.max_records,
+                                          output_file=output_file)
+                result["success"] = True
+                result["output"] = exported_file
+                
+            elif args.operation == 'schema':
+                from btrtools.cli.schema import detect_schema
+                schema = detect_schema(filepath, record_size=args.record_size, max_records=args.max_records)
+                result["success"] = True
+                result["output"] = schema
+                
+            elif args.operation == 'check':
+                from btrtools.cli.check import check_integrity
+                check_result = check_integrity(filepath)
+                result["success"] = True
+                result["output"] = check_result
+                
+            return result
+            
+        except Exception as e:
+            return {"file": filepath, "success": False, "error": str(e), "output": None}
+    
+    # Process files
+    results = []
+    if args.parallel > 1:
+        with concurrent.futures.ThreadPoolExecutor(max_workers=args.parallel) as executor:
+            futures = [executor.submit(process_file, f) for f in valid_files]
+            for future in concurrent.futures.as_completed(futures):
+                results.append(future.result())
+    else:
+        for filepath in valid_files:
+            results.append(process_file(filepath))
+    
+    # Display results
+    success_count = sum(1 for r in results if r["success"])
+    
+    if use_rich:
+        table = Table(title="Batch Processing Results")
+        table.add_column("File", style="cyan")
+        table.add_column("Status", style="green")
+        table.add_column("Output/Error", style="yellow")
+        
+        for result in results:
+            status = "✅ Success" if result["success"] else "❌ Failed"
+            output = result["output"] or result["error"] or ""
+            table.add_row(os.path.basename(result["file"]), status, str(output))
+        
+        console.print(table)
+        console.print(f"\n[bold]Summary:[/bold] {success_count}/{len(results)} files processed successfully")
+    else:
+        print(f"\nBatch processing completed: {success_count}/{len(results)} files successful")
+        for result in results:
+            status = "SUCCESS" if result["success"] else "FAILED"
+            print(f"{status}: {result['file']}")
+            if result["error"]:
+                print(f"  Error: {result['error']}")
+    
+    return 0 if success_count == len(results) else 1
 
 
 if __name__ == '__main__':

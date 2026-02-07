@@ -17,6 +17,11 @@ BTR-TOOLS is a comprehensive toolkit for analyzing, repairing, and exporting dat
 - **Rich CLI Output**: Enhanced terminal interface with progress bars and colored output
 - **Comprehensive Testing**: Full test suite with unit, integration, and performance tests
 - **CI/CD Pipeline**: Automated testing, linting, and quality assurance
+- **Batch Processing**: Process multiple Btrieve files simultaneously
+- **Data Repair**: Validate and repair corrupted Btrieve files
+- **Advanced Search**: Search and filter records with regex support
+- **Data Visualization**: Generate HTML reports with statistics and analysis
+- **Performance Profiling**: Monitor memory usage and processing speed
 
 ## Installation
 
@@ -129,6 +134,87 @@ btrtools --progress compare file1.btr file2.btr --max-records 1000
 
 # Save comparison results to JSON
 btrtools compare file1.btr file2.btr --output comparison.json
+```
+
+### Batch Processing
+
+Process multiple Btrieve files simultaneously with various operations:
+
+```bash
+# Batch analyze multiple files
+btrtools batch *.btr --operation analyze
+
+# Batch export all files to CSV
+btrtools batch *.btr --operation export --format csv --output-dir ./exports
+
+# Parallel processing with 4 workers
+btrtools batch *.btr --operation schema --parallel 4
+```
+
+### Data Repair
+
+Validate and repair corrupted Btrieve files:
+
+```bash
+# Validate file integrity without repairing
+btrtools repair file.btr --validate-only
+
+# Attempt to repair corrupted file
+btrtools repair file.btr --fix-corruption --backup
+
+# Repair with custom output location
+btrtools repair file.btr --fix-corruption --output repaired_file.btr
+```
+
+### Search and Filter
+
+Search for specific content within Btrieve records:
+
+```bash
+# Simple text search
+btrtools search file.btr --query "JOHN DOE"
+
+# Case-insensitive regex search
+btrtools search file.btr --query "customer.*\\d+" --regex
+
+# Invert match (show non-matching records)
+btrtools search file.btr --query "test" --invert-match
+
+# Export search results to CSV
+btrtools search file.btr --query "error" --format csv --output search_results.csv
+```
+
+### Generate Reports
+
+Create comprehensive analysis reports with visualizations:
+
+```bash
+# Generate HTML report
+btrtools report file.btr --format html --output-dir ./reports
+
+# Generate JSON report for programmatic use
+btrtools report file.btr --format json
+
+# Text report with limited records
+btrtools report file.btr --format text --max-records 500
+```
+
+### Performance Statistics
+
+Monitor processing performance and memory usage:
+
+```bash
+# Basic performance statistics
+btrtools stats file.btr
+
+# Run performance benchmarks
+btrtools stats file.btr --benchmark
+
+# Include memory profiling
+btrtools stats file.btr --memory-profile --benchmark
+
+# Save statistics to JSON file
+btrtools stats file.btr --output performance.json
 ```
 
 ## Rich CLI Output

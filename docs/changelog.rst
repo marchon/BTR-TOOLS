@@ -6,6 +6,36 @@ All notable changes to BTR-TOOLS will be documented in this file.
 The format is based on `Keep a Changelog <https://keepachangelog.com/en/1.0.0/>`_,
 and this project adheres to `Semantic Versioning <https://semver.org/spec/v2.0.0.html>`_.
 
+[2.2.0] - 2026-02-07
+--------------------
+
+**Added**
+
+* Excel export functionality with ``btrtools export --format excel`` command
+* Batch processing with ``btrtools batch`` command for processing multiple files
+* Data repair capabilities with ``btrtools repair`` command
+* Advanced search and filtering with ``btrtools search`` command
+* Data visualization reports with ``btrtools report`` command
+* Performance profiling and statistics with ``btrtools stats`` command
+* Support for regex search patterns and case-insensitive matching
+* Parallel processing support for batch operations
+* Memory usage profiling and benchmarking tools
+* HTML, JSON, and text report formats
+* Comprehensive test coverage for all new features
+
+**Changed**
+
+* Updated CLI help text with new command examples
+* Enhanced documentation with usage examples for all new features
+* Added new dependencies: openpyxl, psutil
+* Improved error handling and validation for new commands
+
+**Fixed**
+
+* Test file creation issues for batch processing tests
+* Memory profiling compatibility issues
+* Report generation edge cases
+
 [2.1.0] - 2026-02-07
 --------------------
 

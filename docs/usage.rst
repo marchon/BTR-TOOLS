@@ -154,6 +154,89 @@ Save comparison results to JSON file::
 
     btrtools compare file1.btr file2.btr --output comparison.json
 
+Batch Operations
+----------------
+
+Process multiple Btrieve files simultaneously::
+
+    btrtools batch *.btr --operation analyze
+
+Batch export to CSV::
+
+    btrtools batch *.btr --operation export --format csv --output-dir ./exports
+
+Parallel processing::
+
+    btrtools batch *.btr --operation schema --parallel 4
+
+Data Repair
+-----------
+
+Validate file integrity::
+
+    btrtools repair myfile.btr --validate-only
+
+Attempt to repair corrupted file::
+
+    btrtools repair myfile.btr --fix-corruption --backup
+
+Repair with custom output::
+
+    btrtools repair myfile.btr --fix-corruption --output repaired.btr
+
+Search and Filter
+-----------------
+
+Search for text in records::
+
+    btrtools search myfile.btr --query "JOHN DOE"
+
+Regex search::
+
+    btrtools search myfile.btr --query "customer.*\\d+" --regex
+
+Invert match::
+
+    btrtools search myfile.btr --query "test" --invert-match
+
+Export search results::
+
+    btrtools search myfile.btr --query "error" --format csv --output results.csv
+
+Generate Reports
+----------------
+
+Create HTML analysis report::
+
+    btrtools report myfile.btr --format html --output-dir ./reports
+
+Generate JSON report::
+
+    btrtools report myfile.btr --format json
+
+Text report::
+
+    btrtools report myfile.btr --format text
+
+Performance Statistics
+----------------------
+
+Basic performance stats::
+
+    btrtools stats myfile.btr
+
+Run benchmarks::
+
+    btrtools stats myfile.btr --benchmark
+
+Memory profiling::
+
+    btrtools stats myfile.btr --memory-profile
+
+Save stats to file::
+
+    btrtools stats myfile.btr --output stats.json
+
 Configuration
 -------------
 

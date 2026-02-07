@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "btrtools"
-version = "2.0.0"
+version = "2.2.0"
 description = "Generic command-line toolkit for Btrieve database file analysis and export"
 readme = "README.md"
 license = {text = "MIT"}
@@ -44,6 +44,7 @@ dependencies = [
     "rich>=13.0.0",
     "tqdm>=4.64.0",
     "openpyxl>=3.0.0",
+    "psutil>=5.8.0",
 ]
 
 [project.optional-dependencies]
