@@ -114,6 +114,20 @@ btrtools check file.btr --verbose
 btrtools --progress check file.btr --verbose
 ```
 
+### Compare Files
+
+Compare two Btrieve files to identify differences and similarities:
+
+```bash
+btrtools compare file1.btr file2.btr
+
+# With rich comparison output
+btrtools --progress compare file1.btr file2.btr --max-records 1000
+
+# Save comparison results to JSON
+btrtools compare file1.btr file2.btr --output comparison.json
+```
+
 ## Rich CLI Output
 
 BTR-TOOLS supports enhanced terminal output with progress bars, colored text, and structured tables. Enable rich output with the `--progress` or `-P` flag:
@@ -219,6 +233,9 @@ btrtools check inventory.btr --verbose
 # Detect the data schema
 btrtools schema inventory.btr --output schema.txt
 
+# Compare with backup file
+btrtools compare inventory.btr inventory_backup.btr
+
 # Export data to CSV format
 btrtools export inventory.btr --format csv --output inventory.csv
 ```
@@ -234,6 +251,9 @@ btrtools export data.btr --format jsonl --max-records 1000 --output data.jsonl
 
 # Force specific record size for problematic files
 btrtools export data.btr --format sqlite --record-size 256 --output data.db
+
+# Compare files with detailed record analysis
+btrtools compare production.btr staging.btr --max-records 1000 --output diff.json
 
 # Batch process multiple files
 for file in *.btr; do

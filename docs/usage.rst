@@ -13,6 +13,7 @@ BTR-TOOLS provides a unified command-line interface with multiple subcommands:
 * ``btrtools check``: Check file integrity
 * ``btrtools scan``: Scan directories for Btrieve files
 * ``btrtools schema``: Detect file schema and field structure
+* ``btrtools compare``: Compare two Btrieve files for differences
 
 All commands support the ``--help`` flag for detailed usage information.
 
@@ -129,6 +130,25 @@ Detailed integrity report::
 With progress indicators::
 
     btrtools --progress check myfile.btr --verbose
+
+Comparing Files
+---------------
+
+Compare two Btrieve files to identify differences::
+
+    btrtools compare file1.btr file2.btr
+
+Compare with detailed record analysis::
+
+    btrtools compare file1.btr file2.btr --max-records 1000
+
+With rich comparison output::
+
+    btrtools --progress compare file1.btr file2.btr
+
+Save comparison results to JSON file::
+
+    btrtools compare file1.btr file2.btr --output comparison.json
 
 Configuration
 -------------

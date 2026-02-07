@@ -19,6 +19,7 @@ and this project adheres to `Semantic Versioning <https://semver.org/spec/v2.0.0
 * Security scanning with bandit and safety
 * Enhanced documentation with usage examples
 * New CLI commands: scan, export, schema
+* File comparison functionality with ``btrtools compare`` command
 * Improved error handling and user feedback
 
 **Changed**

@@ -130,6 +130,7 @@ Examples:
   btrtools analyze file.btr              # Analyze a specific Btrieve file
   btrtools analyze file.btr -P           # Analyze with progress display
   btrtools export file.btr --format csv  # Export data to CSV format
+  btrtools compare file1.btr file2.btr   # Compare two Btrieve files
   btrtools check file.btr                # Check file integrity
 
 Debug Options:
@@ -255,19 +256,28 @@ Debug Options:
         help='Output file for schema (default: stdout)'
     )
 
-    # Check command
-    check_parser = subparsers.add_parser(
-        'check',
-        help='Check Btrieve file integrity'
+    # Compare command
+    compare_parser = subparsers.add_parser(
+        'compare',
+        help='Compare two Btrieve files'
     )
-    check_parser.add_argument(
-        'file',
-        help='Btrieve file to check'
+    compare_parser.add_argument(
+        'file1',
+        help='First Btrieve file to compare'
     )
-    check_parser.add_argument(
-        '--verbose', '-v',
-        action='store_true',
-        help='Verbose output'
+    compare_parser.add_argument(
+        'file2',
+        help='Second Btrieve file to compare'
+    )
+    compare_parser.add_argument(
+        '--max-records', '-n',
+        type=int,
+        default=100,
+        help='Maximum records to compare (default: 100)'
+    )
+    compare_parser.add_argument(
+        '--output', '-o',
+        help='Output file for comparison results (default: stdout)'
     )
 
     return parser
@@ -316,6 +326,8 @@ def main() -> int:
             exit_code = cmd_schema(args, use_rich)
         elif args.command == 'check':
             exit_code = cmd_check(args, use_rich)
+        elif args.command == 'compare':
+            exit_code = cmd_compare(args, use_rich)
         else:
             if use_rich:
                 console.print(f"[red]Unknown command: {args.command}[/red]")
@@ -627,7 +639,142 @@ def cmd_schema(args, use_rich: bool = False) -> int:
     return 0
 
 
-def cmd_check(args, use_rich: bool = False) -> int:
+def cmd_compare(args, use_rich: bool = False) -> int:
+    """Handle compare command."""
+    from btrtools.cli.compare import compare_files
+
+    if use_rich:
+        with create_progress_bar("Comparing files") as progress:
+            task = progress.add_task("Analyzing file structures...", total=100)
+            progress.update(task, advance=50)
+
+            comparison = compare_files(args.file1, args.file2, args.max_records)
+
+            progress.update(task, advance=50, description="Generating comparison report...")
+    else:
+        logger.info(f"Comparing files: {args.file1} vs {args.file2}")
+        comparison = compare_files(args.file1, args.file2, args.max_records)
+        logger.info("Comparison complete")
+
+    if use_rich:
+        # Display comparison results with rich formatting
+        from rich.panel import Panel
+        from rich.text import Text
+
+        # File info panel
+        file_info = f"[bold]File 1:[/bold] {comparison['file1']['filename']} ({comparison['file1']['size']:,} bytes)\n"
+        file_info += f"[bold]File 2:[/bold] {comparison['file2']['filename']} ({comparison['file2']['size']:,} bytes)"
+
+        console.print(Panel.fit(file_info, title="Files Compared"))
+
+        # Assessment
+        assessment = comparison.get('assessment', 'unknown')
+        if assessment == 'files_appear_identical':
+            assessment_color = "green"
+            assessment_icon = "✅"
+        elif assessment == 'size_difference_only':
+            assessment_color = "yellow"
+            assessment_icon = "⚠️"
+        elif assessment == 'minor_differences':
+            assessment_color = "yellow"
+            assessment_icon = "⚠️"
+        else:
+            assessment_color = "red"
+            assessment_icon = "❌"
+
+        console.print(f"\n{assessment_icon} Assessment: [{assessment_color}]{assessment.replace('_', ' ').title()}[/{assessment_color}]")
+
+        # Differences table
+        if comparison['differences']:
+            diff_table = Table(title="Differences Found")
+            diff_table.add_column("Property", style="cyan")
+            diff_table.add_column("File 1", style="magenta")
+            diff_table.add_column("File 2", style="green")
+            diff_table.add_column("Difference", style="yellow")
+
+            for prop, diff in comparison['differences'].items():
+                if prop == 'file_size':
+                    val1 = f"{diff['file1']:,}"
+                    val2 = f"{diff['file2']:,}"
+                    diff_val = f"{diff['difference']:,} bytes"
+                elif prop in ['ascii_percentage', 'quality_score']:
+                    val1 = f"{diff['file1']:.1f}"
+                    val2 = f"{diff['file2']:.1f}"
+                    diff_val = f"{diff['difference']:.1f}"
+                else:
+                    val1 = str(diff.get('file1', 'N/A'))
+                    val2 = str(diff.get('file2', 'N/A'))
+                    diff_val = "N/A"
+
+                diff_table.add_row(prop.replace('_', ' ').title(), val1, val2, diff_val)
+
+            console.print(diff_table)
+
+        # Similarities
+        if comparison['similarities']:
+            sim_items = [f"{prop.replace('_', ' ').title()}: {value}"
+                        for prop, value in comparison['similarities'].items()]
+            console.print(Panel.fit("\n".join(sim_items), title="Similarities"))
+
+        # Record comparison if available
+        if 'record_comparison' in comparison:
+            rec_comp = comparison['record_comparison']
+            if 'record_sizes_different' in rec_comp:
+                console.print(f"\n[red]Record sizes differ: {rec_comp['file1_record_size']} vs {rec_comp['file2_record_size']}[/red]")
+            else:
+                match_pct = rec_comp.get('match_percentage', 0)
+                console.print(f"\n[yellow]Record Comparison:[/yellow] {rec_comp['identical_records']}/{rec_comp['total_compared']} records identical ({match_pct:.1f}%)")
+
+    else:
+        # Plain text output
+        print("Btrieve File Comparison Results")
+        print("=" * 50)
+        print(f"File 1: {comparison['file1']['filename']} ({comparison['file1']['size']:,} bytes)")
+        print(f"File 2: {comparison['file2']['filename']} ({comparison['file2']['size']:,} bytes)")
+        print()
+
+        assessment = comparison.get('assessment', 'unknown')
+        print(f"Assessment: {assessment.replace('_', ' ').title()}")
+
+        if comparison['differences']:
+            print("\nDifferences:")
+            for prop, diff in comparison['differences'].items():
+                if prop == 'file_size':
+                    print(f"  {prop}: {diff['file1']:,} vs {diff['file2']:,} (diff: {diff['difference']:,} bytes)")
+                else:
+                    print(f"  {prop}: {diff.get('file1', 'N/A')} vs {diff.get('file2', 'N/A')}")
+
+        if comparison['similarities']:
+            print("\nSimilarities:")
+            for prop, value in comparison['similarities'].items():
+                print(f"  {prop}: {value}")
+
+        if 'record_comparison' in comparison:
+            rec_comp = comparison['record_comparison']
+            if 'record_sizes_different' in rec_comp:
+                print(f"\nRecord sizes differ: {rec_comp['file1_record_size']} vs {rec_comp['file2_record_size']}")
+            else:
+                match_pct = rec_comp.get('match_percentage', 0)
+                print(f"\nRecord comparison: {rec_comp['identical_records']}/{rec_comp['total_compared']} records identical ({match_pct:.1f}%)")
+
+    # Write to output file if specified
+    if args.output:
+        try:
+            import json
+            with open(args.output, 'w') as f:
+                json.dump(comparison, f, indent=2)
+            if use_rich:
+                print_success(f"Comparison results written to: {args.output}", use_rich)
+            else:
+                logger.info(f"Comparison results written to: {args.output}")
+        except Exception as e:
+            if use_rich:
+                print_error(f"Failed to write output file: {e}", use_rich)
+            else:
+                logger.error(f"Failed to write comparison results to {args.output}: {e}")
+            return 1
+
+    return 0
     """Handle check command."""
     from btrtools.cli.check import check_integrity
 
