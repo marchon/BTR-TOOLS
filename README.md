@@ -10,7 +10,7 @@ BTR-TOOLS is a comprehensive toolkit for analyzing, repairing, and exporting dat
 
 - **Directory Scanning**: Automatically detect Btrieve files in directories
 - **File Analysis**: Comprehensive analysis of file structure and content patterns
-- **Data Export**: Export data to CSV, JSON Lines, and SQLite formats
+- **Data Export**: Export data to CSV, JSON Lines, SQLite, and Excel formats
 - **Schema Detection**: Automatically detect field boundaries and data types
 - **Integrity Checking**: Verify file integrity and detect corruption
 - **Record Size Detection**: Automatically determine optimal record sizes
@@ -87,6 +87,9 @@ btrtools --progress export file.btr --format jsonl
 
 # Export to SQLite database
 btrtools export file.btr --format sqlite
+
+# Export to Excel spreadsheet
+btrtools export file.btr --format excel
 
 # Specify record size and limit records
 btrtools export file.btr --format csv --record-size 128 --max-records 1000
@@ -216,6 +219,9 @@ One JSON object per line, suitable for streaming processing:
 ### SQLite Export
 Creates a SQLite database with a `btrieve_records` table containing all data and extracted fields.
 
+### Excel Export
+Creates an Excel spreadsheet (.xlsx) with formatted data, auto-adjusted column widths, and bold headers. Includes all record data and extracted fields in a user-friendly spreadsheet format.
+
 ## Examples
 
 ### Basic File Analysis Workflow
@@ -238,6 +244,9 @@ btrtools compare inventory.btr inventory_backup.btr
 
 # Export data to CSV format
 btrtools export inventory.btr --format csv --output inventory.csv
+
+# Export data to Excel format
+btrtools export inventory.btr --format excel --output inventory.xlsx
 ```
 
 ### Advanced Usage

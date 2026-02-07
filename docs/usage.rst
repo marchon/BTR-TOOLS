@@ -87,6 +87,10 @@ Extract to SQLite database::
 
     btrtools export myfile.btr --format sqlite --output records.db
 
+Extract to Excel spreadsheet::
+
+    btrtools export myfile.btr --format excel --output records.xlsx
+
 Limit the number of records::
 
     btrtools export myfile.btr --format csv --max-records 1000

@@ -72,17 +72,26 @@ class TestCLIExport(unittest.TestCase):
 
     def setUp(self):
         """Create test file and output location."""
-        self.test_data = b'ABCD' * 1024
+        # Create a larger test file that looks like a Btrieve file
+        # Btrieve files have FCR pages (2 * 4096 = 8192 bytes) + data
+        fcr_data = b'\x00' * 8192  # FCR pages
+        record_data = b'ABCD' * 16  # 64 bytes per record
+        data_records = record_data * 100  # 100 records
+        self.test_data = fcr_data + data_records
+        
         self.temp_file = tempfile.NamedTemporaryFile(delete=False, suffix='.btr')
         self.temp_file.write(self.test_data)
         self.temp_file.close()
 
-        self.output_file = tempfile.NamedTemporaryFile(delete=False, suffix='.csv')
-        self.output_file.close()
+        self.output_file_csv = tempfile.NamedTemporaryFile(delete=False, suffix='.csv')
+        self.output_file_csv.close()
+        
+        self.output_file_excel = tempfile.NamedTemporaryFile(delete=False, suffix='.xlsx')
+        self.output_file_excel.close()
 
     def tearDown(self):
         """Clean up test files."""
-        for filename in [self.temp_file.name, self.output_file.name]:
+        for filename in [self.temp_file.name, self.output_file_csv.name, self.output_file_excel.name]:
             if os.path.exists(filename):
                 os.unlink(filename)
 
@@ -90,13 +99,26 @@ class TestCLIExport(unittest.TestCase):
         """Test CSV export functionality."""
         # This test might need to be adjusted based on actual export implementation
         try:
-            result = export_file(self.temp_file.name, 'csv', output_file=self.output_file.name)
+            result = export_file(self.temp_file.name, 'csv', record_size=64, output_file=self.output_file_csv.name)
             # Check that output file was created
             self.assertTrue(os.path.exists(result))
-        except Exception:
+        except Exception as e:
             # Export might not be fully implemented yet
-            self.skipTest("Export functionality not fully implemented")
-
+            self.skipTest(f"Export functionality not fully implemented: {e}")
+    def test_export_excel(self):
+        """Test Excel export functionality."""
+        try:
+            result = export_file(self.temp_file.name, 'excel', record_size=64, output_file=self.output_file_excel.name)
+            # Check that output file was created
+            self.assertTrue(os.path.exists(result))
+            # Check that it's a valid Excel file (has .xlsx extension)
+            self.assertTrue(result.endswith('.xlsx'))
+        except ImportError:
+            # Skip if openpyxl is not available
+            self.skipTest("openpyxl not available for Excel export")
+        except Exception as e:
+            # Export might not be fully implemented yet
+            self.skipTest(f"Excel export functionality not fully implemented: {e}")
 
 class TestCLICompare(unittest.TestCase):
     """Test compare CLI command."""

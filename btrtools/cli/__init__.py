@@ -212,7 +212,7 @@ Debug Options:
     )
     export_parser.add_argument(
         '--format', '-f',
-        choices=['csv', 'jsonl', 'sqlite'],
+        choices=['csv', 'jsonl', 'sqlite', 'excel'],
         default='csv',
         help='Export format (default: csv)'
     )

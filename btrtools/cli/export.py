@@ -54,6 +54,10 @@ def export_file(
             output_file = f"{base_name}.jsonl"
         elif format_type == 'sqlite':
             output_file = f"{base_name}.db"
+        elif format_type == 'excel':
+            output_file = f"{base_name}.xlsx"
+        elif format_type == 'xml':
+            output_file = f"{base_name}.xml"
 
     # Export based on format
     if format_type == 'csv':
@@ -62,6 +66,10 @@ def export_file(
         _export_jsonl(records, output_file)
     elif format_type == 'sqlite':
         _export_sqlite(records, output_file)
+    elif format_type == 'excel':
+        _export_excel(records, output_file)
+    elif format_type == 'xml':
+        _export_xml(records, output_file)
     else:
         raise ValueError(f"Unsupported format: {format_type}")
 
@@ -183,3 +191,120 @@ def _export_sqlite(records: List[BtrieveRecord], output_file: str) -> None:
 
     finally:
         conn.close()
+
+
+def _export_excel(records: List[BtrieveRecord], output_file: str) -> None:
+    """Export records to Excel (.xlsx) format."""
+    try:
+        from openpyxl import Workbook
+        from openpyxl.styles import Font
+    except ImportError:
+        raise ImportError("openpyxl is required for Excel export. Install with: pip install openpyxl")
+
+    if not records:
+        return
+
+    # Create workbook and worksheet
+    wb = Workbook()
+    ws = wb.active
+    ws.title = "Btrieve Records"
+
+    # Collect all unique field names
+    field_names = set()
+    for record in records:
+        field_names.update(record.extracted_fields.keys())
+
+    # Add standard fields
+    standard_fields = [
+        'record_num', 'record_size', 'raw_bytes', 'decoded_text',
+        'printable_chars', 'has_digits', 'has_alpha'
+    ]
+    all_fields = standard_fields + sorted(list(field_names))
+
+    # Write header row with bold font
+    header_font = Font(bold=True)
+    for col_num, field_name in enumerate(all_fields, 1):
+        cell = ws.cell(row=1, column=col_num, value=field_name)
+        cell.font = header_font
+
+    # Write data rows
+    for row_num, record in enumerate(records, 2):
+        # Standard fields
+        ws.cell(row=row_num, column=1, value=record.record_num)
+        ws.cell(row=row_num, column=2, value=record.record_size)
+        ws.cell(row=row_num, column=3, value=record.raw_bytes.hex())
+        ws.cell(row=row_num, column=4, value=record.decoded_text)
+        ws.cell(row=row_num, column=5, value=record.printable_chars)
+        ws.cell(row=row_num, column=6, value=record.has_digits)
+        ws.cell(row=row_num, column=7, value=record.has_alpha)
+
+        # Extracted fields
+        col_offset = len(standard_fields)
+        for i, field_name in enumerate(sorted(record.extracted_fields.keys()), col_offset):
+            ws.cell(row=row_num, column=i+1, value=record.extracted_fields[field_name])
+
+    # Auto-adjust column widths
+    for col_num, column in enumerate(ws.columns, 1):
+        max_length = 0
+        column_letter = ws.cell(row=1, column=col_num).column_letter
+
+        for cell in column:
+            try:
+                if len(str(cell.value)) > max_length:
+                    max_length = len(str(cell.value))
+            except:
+                pass
+
+        adjusted_width = min(max_length + 2, 50)  # Cap at 50 characters
+        ws.column_dimensions[column_letter].width = adjusted_width
+
+    # Save the workbook
+    wb.save(output_file)
+
+
+def _export_xml(records: List[BtrieveRecord], output_file: str) -> None:
+    """Export records to XML format."""
+    try:
+        from xml.etree.ElementTree import Element, SubElement, tostring
+        from xml.dom import minidom
+    except ImportError:
+        # xml.etree is part of standard library, so this shouldn't happen
+        raise ImportError("XML support is not available")
+
+    if not records:
+        return
+
+    # Create root element
+    root = Element('btrieve_records')
+
+    for record in records:
+        record_elem = SubElement(root, 'record')
+        record_elem.set('number', str(record.record_num))
+        record_elem.set('size', str(record.record_size))
+
+        # Add standard fields
+        SubElement(record_elem, 'raw_bytes').text = record.raw_bytes.hex()
+        SubElement(record_elem, 'decoded_text').text = record.decoded_text
+        SubElement(record_elem, 'printable_chars').text = str(record.printable_chars)
+        SubElement(record_elem, 'has_digits').text = str(record.has_digits)
+        SubElement(record_elem, 'has_alpha').text = str(record.has_alpha)
+
+        # Add extracted fields
+        if record.extracted_fields:
+            fields_elem = SubElement(record_elem, 'extracted_fields')
+            for field_name, field_value in record.extracted_fields.items():
+                field_elem = SubElement(fields_elem, 'field')
+                field_elem.set('name', field_name)
+                field_elem.text = str(field_value)
+
+    # Pretty print XML
+    rough_string = tostring(root, encoding='unicode')
+    reparsed = minidom.parseString(rough_string)
+    pretty_xml = reparsed.toprettyxml(indent="  ")
+
+    # Remove extra whitespace
+    lines = [line for line in pretty_xml.split('\n') if line.strip()]
+    clean_xml = '\n'.join(lines)
+
+    with open(output_file, 'w', encoding='utf-8') as f:
+        f.write(clean_xml)
