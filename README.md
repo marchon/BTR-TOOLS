@@ -506,6 +506,14 @@ btrtools/
 
 The field extraction patterns in `btrieve.py` can be extended by adding new regex patterns to the `_extract_basic_fields` method for domain-specific data patterns.
 
+## Documentation
+
+For detailed technical documentation and code organization:
+
+- **[Code Outline Reference Document](CodeOutlineReferenceDocument.md)** - Complete codebase overview, function indices, and development guidelines
+- **[Sphinx Documentation](https://btr-tools.readthedocs.io/)** - Comprehensive API documentation and usage guides
+- **[Contributing Guide](docs/contributing.rst)** - Development setup and contribution guidelines
+
 ## License
 
 MIT License - see LICENSE file for details.

@@ -92,6 +92,7 @@ Contents
    :caption: Development:
 
    contributing
+   code-outline-reference
    changelog
 
 Indices and Tables
