@@ -4,6 +4,29 @@ Core Btrieve file handling utilities.
 This module contains the core functionality for reading, analyzing, and extracting
 data from Btrieve database files, based on the Btrieve v5 format specifications
 and patterns discovered during the dental practice data reconstruction project.
+
+FUNCTION INDEX:
+===============
+
+PUBLIC FUNCTIONS (External API):
+--------------------------------
+- BtrieveAnalyzer.__init__(filepath): Initialize analyzer for a Btrieve file
+- BtrieveAnalyzer.analyze_file(): Analyze basic file structure and content patterns
+- BtrieveAnalyzer.detect_record_size(max_records): Detect optimal record size using quality scoring
+- BtrieveAnalyzer.extract_records(record_size, max_records): Extract records from the Btrieve file
+- BtrieveAnalyzer.check_integrity(): Check file integrity and detect potential corruption
+
+PRIVATE FUNCTIONS (Internal Implementation):
+-------------------------------------------
+- BtrieveAnalyzer._classify_content_type(text, info): Classify content type based on patterns
+- BtrieveAnalyzer._create_record(record_num, record_size, record_bytes): Create BtrieveRecord from raw bytes
+- BtrieveAnalyzer._extract_basic_fields(text): Extract basic fields using regex patterns
+- BtrieveAnalyzer._calculate_quality_score(records): Calculate quality score for record set
+
+DATA CLASSES:
+-------------
+- BtrieveFileInfo: Information about a Btrieve file
+- BtrieveRecord: A single Btrieve record with extracted data
 """
 
 import os
@@ -271,6 +294,66 @@ class BtrieveAnalyzer:
         logger.debug(f"Extracted {len(records)} records")
         return records
 
+    def check_integrity(self) -> Dict[str, Any]:
+        """Check file integrity and detect potential corruption."""
+        logger.debug(f"Checking integrity of {self.filepath}")
+
+        integrity_info: Dict[str, Any] = {
+            "file_exists": False,
+            "readable": False,
+            "valid_size": False,
+            "has_fcr_pages": False,
+            "data_pages": 0,
+            "corruption_detected": False,
+            "corruption_details": [],
+        }
+
+        if not os.path.exists(self.filepath):
+            integrity_info["corruption_details"].append("File does not exist")
+            integrity_info["corruption_detected"] = True
+            logger.warning(f"File does not exist: {self.filepath}")
+            return integrity_info
+
+        integrity_info["file_exists"] = True
+
+        try:
+            with open(self.filepath, "rb") as f:
+                data = f.read()
+            integrity_info["readable"] = True
+            logger.debug(f"Successfully read {len(data)} bytes")
+        except Exception as e:
+            integrity_info["corruption_details"].append(f"Read error: {e}")
+            integrity_info["corruption_detected"] = True
+            logger.error(f"Failed to read file {self.filepath}: {e}")
+            return integrity_info
+
+        # Size validation
+        min_size = (self.FCR_PAGES + 1) * self.PAGE_SIZE  # At least FCR + 1 data page
+        if len(data) >= min_size:
+            integrity_info["valid_size"] = True
+        else:
+            detail = f"File too small: {len(data)} < {min_size}"
+            integrity_info["corruption_details"].append(detail)
+            integrity_info["corruption_detected"] = True
+            logger.warning(f"File size validation failed: {detail}")
+
+        # FCR pages check
+        if len(data) >= self.FCR_PAGES * self.PAGE_SIZE:
+            integrity_info["has_fcr_pages"] = True
+            data_start = self.FCR_PAGES * self.PAGE_SIZE
+            data_pages_size = len(data) - data_start
+            integrity_info["data_pages"] = data_pages_size // (
+                self.PAGE_SIZE - self.HEADER_SIZE
+            )
+            logger.debug(f"File has {integrity_info['data_pages']} data pages")
+
+        if integrity_info["corruption_detected"]:
+            logger.warning(f"Corruption detected in {self.filepath}")
+        else:
+            logger.info(f"Integrity check passed for {self.filepath}")
+
+        return integrity_info
+
     def _create_record(
         self, record_num: int, record_size: int, record_bytes: bytes
     ) -> BtrieveRecord:
@@ -362,63 +445,3 @@ class BtrieveAnalyzer:
         )
 
         return score
-
-    def check_integrity(self) -> Dict[str, Any]:
-        """Check file integrity and detect potential corruption."""
-        logger.debug(f"Checking integrity of {self.filepath}")
-
-        integrity_info: Dict[str, Any] = {
-            "file_exists": False,
-            "readable": False,
-            "valid_size": False,
-            "has_fcr_pages": False,
-            "data_pages": 0,
-            "corruption_detected": False,
-            "corruption_details": [],
-        }
-
-        if not os.path.exists(self.filepath):
-            integrity_info["corruption_details"].append("File does not exist")
-            integrity_info["corruption_detected"] = True
-            logger.warning(f"File does not exist: {self.filepath}")
-            return integrity_info
-
-        integrity_info["file_exists"] = True
-
-        try:
-            with open(self.filepath, "rb") as f:
-                data = f.read()
-            integrity_info["readable"] = True
-            logger.debug(f"Successfully read {len(data)} bytes")
-        except Exception as e:
-            integrity_info["corruption_details"].append(f"Read error: {e}")
-            integrity_info["corruption_detected"] = True
-            logger.error(f"Failed to read file {self.filepath}: {e}")
-            return integrity_info
-
-        # Size validation
-        min_size = (self.FCR_PAGES + 1) * self.PAGE_SIZE  # At least FCR + 1 data page
-        if len(data) >= min_size:
-            integrity_info["valid_size"] = True
-        else:
-            detail = f"File too small: {len(data)} < {min_size}"
-            integrity_info["corruption_details"].append(detail)
-            integrity_info["corruption_detected"] = True
-            logger.warning(f"File size validation failed: {detail}")
-
-        # FCR pages check
-        if len(data) >= self.FCR_PAGES * self.PAGE_SIZE:
-            integrity_info["has_fcr_pages"] = True
-            data_start = self.FCR_PAGES * self.PAGE_SIZE
-            data_pages_size = len(data) - data_start
-            integrity_info["data_pages"] = data_pages_size // (
-                self.PAGE_SIZE - self.HEADER_SIZE
-            )
-            logger.debug(f"File has {integrity_info['data_pages']} data pages")
-
-        if integrity_info["corruption_detected"]:
-            logger.warning(f"Corruption detected in {self.filepath}")
-        else:
-            logger.info(f"Integrity check passed for {self.filepath}")
-
-        return integrity_info

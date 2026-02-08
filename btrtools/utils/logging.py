@@ -3,6 +3,43 @@ Logging and error handling utilities for BTR-TOOLS.
 
 This module provides comprehensive logging, exception handling, and bug report
 generation capabilities with data simulation to protect proprietary information.
+
+FUNCTION INDEX:
+===============
+
+CLASSES:
+--------
+- ErrorContext: Context information for errors (dataclass)
+- BugReport: Structured bug report with simulated data (dataclass)
+- BTRLogger: Enhanced logging system for BTR-TOOLS
+- BTRErrorHandler: Comprehensive error handling and bug report generation
+
+BTRLogger METHODS (External API):
+---------------------------------
+- __init__(name, level): Initialize logger with name and level
+- set_level(level): Set logging level from string
+- debug/info/warning/error/critical(message): Standard logging methods
+- exception(message): Log exception with traceback
+
+BTRErrorHandler METHODS (External API):
+---------------------------------------
+- __init__(logger): Initialize error handler with logger instance
+- handle_error(error, context): Handle exceptions and generate bug reports
+
+PUBLIC FUNCTIONS (External API):
+--------------------------------
+- safe_execute(func, context, *args, **kwargs): Execute function with error handling
+- create_error_context(command, args, **kwargs): Create error context from command arguments
+
+PRIVATE METHODS (Internal Implementation):
+------------------------------------------
+- BTRLogger._setup_file_logging(): Configure file logging with rotation
+- BTRErrorHandler._create_bug_report(error, context): Create structured bug report
+- BTRErrorHandler._simulate_data(context): Generate simulated data for privacy
+- BTRErrorHandler._get_memory_info(): Get system memory information
+- BTRErrorHandler._save_bug_report(report): Save bug report to file
+- BTRErrorHandler._show_user_error(error, context): Display user-friendly error
+- BTRErrorHandler._get_exit_code(error): Determine exit code from exception type
 """
 
 import hashlib

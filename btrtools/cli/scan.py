@@ -1,5 +1,16 @@
 """
 Directory scanning functionality for Btrieve files.
+
+FUNCTION INDEX:
+===============
+
+PUBLIC FUNCTIONS (External API):
+--------------------------------
+- scan_directory(directory, recursive): Scan a directory for Btrieve files
+
+PRIVATE FUNCTIONS (Internal Implementation):
+-------------------------------------------
+- _is_potential_btrieve_file(filepath): Check if a file is potentially a Btrieve file
 """
 
 import os

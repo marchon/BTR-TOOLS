@@ -3,6 +3,38 @@ Command-line interface for BTR-TOOLS.
 
 This module provides the main CLI entry point and command structure
 for the Btrieve file analysis toolkit.
+
+FUNCTION INDEX:
+===============
+
+PUBLIC FUNCTIONS (External API):
+--------------------------------
+- main(): Main CLI entry point - parses arguments and dispatches commands
+- create_parser(): Create and configure the argument parser
+
+DISPLAY/PRINTING FUNCTIONS (External API):
+-----------------------------------------
+- print_success(message, use_rich): Print success message with optional rich formatting
+- print_error(message, use_rich): Print error message with optional rich formatting
+- print_warning(message, use_rich): Print warning message with optional rich formatting
+- print_info(message, use_rich): Print info message with optional rich formatting
+- create_progress_bar(description): Create progress bar for long-running operations
+- display_file_info_rich(info): Display file information using rich formatting
+- display_integrity_results_rich(result): Display integrity check results using rich formatting
+
+COMMAND FUNCTIONS (Internal Implementation):
+-------------------------------------------
+- cmd_scan(args, use_rich): Handle 'scan' command - scan directories for Btrieve files
+- cmd_analyze(args, use_rich): Handle 'analyze' command - analyze Btrieve file structure
+- cmd_export(args, use_rich): Handle 'export' command - export records to various formats
+- cmd_schema(args, use_rich): Handle 'schema' command - detect file schema and field structure
+- cmd_check(args, use_rich): Handle 'check' command - check file integrity
+- cmd_compare(args, use_rich): Handle 'compare' command - compare two Btrieve files
+- cmd_stats(args, use_rich): Handle 'stats' command - performance profiling and statistics
+- cmd_report(args, use_rich): Handle 'report' command - generate data visualization reports
+- cmd_search(args, use_rich): Handle 'search' command - search and filter records
+- cmd_repair(args, use_rich): Handle 'repair' command - validate and repair corrupted files
+- cmd_batch(args, use_rich): Handle 'batch' command - process multiple files simultaneously
 """
 
 import argparse

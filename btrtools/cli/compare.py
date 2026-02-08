@@ -1,5 +1,16 @@
 """
 File comparison functionality for Btrieve files.
+
+FUNCTION INDEX:
+===============
+
+PUBLIC FUNCTIONS (External API):
+--------------------------------
+- compare_files(file1, file2, max_records): Compare two Btrieve files and return detailed comparison results
+
+PRIVATE FUNCTIONS (Internal Implementation):
+-------------------------------------------
+- _compare_records(records1, records2, max_records): Compare records between two files
 """
 
 import os

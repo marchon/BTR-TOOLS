@@ -1,5 +1,20 @@
 """
 Data export functionality for Btrieve files.
+
+FUNCTION INDEX:
+===============
+
+PUBLIC FUNCTIONS (External API):
+--------------------------------
+- export_file(filepath, format_type, record_size, max_records, output_file): Export Btrieve file data to specified format
+
+PRIVATE FUNCTIONS (Internal Implementation):
+-------------------------------------------
+- _export_csv(records, output_file): Export records to CSV format
+- _export_jsonl(records, output_file): Export records to JSON Lines format
+- _export_sqlite(records, output_file): Export records to SQLite database
+- _export_excel(records, output_file): Export records to Excel spreadsheet
+- _export_xml(records, output_file): Export records to XML format
 """
 
 import csv

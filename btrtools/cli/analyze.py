@@ -1,5 +1,12 @@
 """
 File analysis functionality for Btrieve files.
+
+FUNCTION INDEX:
+===============
+
+PUBLIC FUNCTIONS (External API):
+--------------------------------
+- analyze_file(filepath, max_records): Analyze a Btrieve file and return detailed information
 """
 
 from btrtools.core.btrieve import BtrieveAnalyzer, BtrieveFileInfo

@@ -1,5 +1,19 @@
 """
 Schema detection functionality for Btrieve files.
+
+FUNCTION INDEX:
+===============
+
+PUBLIC FUNCTIONS (External API):
+--------------------------------
+- detect_schema(filepath, record_size, max_records): Detect schema information from a Btrieve file
+
+PRIVATE FUNCTIONS (Internal Implementation):
+-------------------------------------------
+- _analyze_field_patterns(records): Analyze patterns in record fields
+- _detect_fields(records, record_size): Detect field boundaries and types
+- _create_field_info(field_data): Create field information dictionary
+- _infer_field_type_and_name(field_samples, position): Infer field type and name from samples
 """
 
 from typing import Any, Dict, List, Optional
