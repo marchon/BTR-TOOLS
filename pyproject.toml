@@ -10,10 +10,10 @@ readme = "README.md"
 license = {text = "MIT"}
 requires-python = ">=3.8"
 authors = [
-    {name = "Btrieve Analysis Team", email = "btrieve-tools@example.com"},
+    {name = "Btrieve Analysis Team", email = "marchon@gmail.com"},
 ]
 maintainers = [
-    {name = "Btrieve Analysis Team", email = "btrieve-tools@example.com"},
+    {name = "Btrieve Analysis Team", email = "marchon@gmail.com"},
 ]
 keywords = [
     "btrieve",
@@ -62,11 +62,11 @@ docs = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/btrieve-tools/btrtools"
+Homepage = "https://github.com/marchon/btrtools"
 Documentation = "https://btrieve-tools.github.io/btrtools/"
-Repository = "https://github.com/btrieve-tools/btrtools.git"
-Issues = "https://github.com/btrieve-tools/btrtools/issues"
-Changelog = "https://github.com/btrieve-tools/btrtools/blob/main/CHANGELOG.md"
+Repository = "https://github.com/marchon/btrtools.git"
+Issues = "https://github.com/marchon/btrtools/issues"
+Changelog = "https://github.com/marchon/btrtools/blob/main/CHANGELOG.md"
 
 [project.scripts]
 btrtools = "btrtools.cli:main"
