@@ -3,7 +3,7 @@ File comparison functionality for Btrieve files.
 """
 
 import os
-from typing import Dict, Any, List, Tuple
+from typing import Any, Dict
 
 from btrtools.core.btrieve import BtrieveAnalyzer
 from btrtools.utils.logging import logger
@@ -32,94 +32,103 @@ def compare_files(file1: str, file2: str, max_records: int = 100) -> Dict[str, A
 
     # Basic file comparison
     comparison = {
-        'file1': {
-            'path': file1,
-            'filename': os.path.basename(file1),
-            'size': info1.file_size,
-            'content_type': info1.content_type,
-            'ascii_percentage': info1.ascii_percentage,
-            'quality_score': info1.quality_score
+        "file1": {
+            "path": file1,
+            "filename": os.path.basename(file1),
+            "size": info1.file_size,
+            "content_type": info1.content_type,
+            "ascii_percentage": info1.ascii_percentage,
+            "quality_score": info1.quality_score,
         },
-        'file2': {
-            'path': file2,
-            'filename': os.path.basename(file2),
-            'size': info2.file_size,
-            'content_type': info2.content_type,
-            'ascii_percentage': info2.ascii_percentage,
-            'quality_score': info2.quality_score
+        "file2": {
+            "path": file2,
+            "filename": os.path.basename(file2),
+            "size": info2.file_size,
+            "content_type": info2.content_type,
+            "ascii_percentage": info2.ascii_percentage,
+            "quality_score": info2.quality_score,
         },
-        'differences': {},
-        'similarities': {}
+        "differences": {},
+        "similarities": {},
     }
 
     # Compare basic properties
-    differences = {}
-    similarities = {}
+    differences: Dict[str, Any] = {}
+    similarities: Dict[str, Any] = {}
 
     # Size comparison
     if info1.file_size != info2.file_size:
-        differences['file_size'] = {
-            'file1': info1.file_size,
-            'file2': info2.file_size,
-            'difference': abs(info1.file_size - info2.file_size)
+        differences["file_size"] = {
+            "file1": info1.file_size,
+            "file2": info2.file_size,
+            "difference": abs(info1.file_size - info2.file_size),
         }
     else:
-        similarities['file_size'] = info1.file_size
+        similarities["file_size"] = info1.file_size
 
     # Content type
     if info1.content_type != info2.content_type:
-        differences['content_type'] = {
-            'file1': info1.content_type,
-            'file2': info2.content_type
+        differences["content_type"] = {
+            "file1": info1.content_type,
+            "file2": info2.content_type,
         }
     else:
-        similarities['content_type'] = info1.content_type
+        similarities["content_type"] = info1.content_type
 
     # ASCII percentage (with tolerance)
     ascii_diff = abs(info1.ascii_percentage - info2.ascii_percentage)
     if ascii_diff > 5.0:  # 5% tolerance
-        differences['ascii_percentage'] = {
-            'file1': info1.ascii_percentage,
-            'file2': info2.ascii_percentage,
-            'difference': ascii_diff
+        differences["ascii_percentage"] = {
+            "file1": info1.ascii_percentage,
+            "file2": info2.ascii_percentage,
+            "difference": ascii_diff,
         }
     else:
-        similarities['ascii_percentage'] = f"{(info1.ascii_percentage + info2.ascii_percentage) / 2:.1f}%"
+        similarities["ascii_percentage"] = (
+            f"{(info1.ascii_percentage + info2.ascii_percentage) / 2:.1f}%"
+        )
 
     # Quality score (with tolerance)
     quality_diff = abs(info1.quality_score - info2.quality_score)
     if quality_diff > 1.0:  # 1.0 tolerance
-        differences['quality_score'] = {
-            'file1': info1.quality_score,
-            'file2': info2.quality_score,
-            'difference': quality_diff
+        differences["quality_score"] = {
+            "file1": info1.quality_score,
+            "file2": info2.quality_score,
+            "difference": quality_diff,
         }
     else:
-        similarities['quality_score'] = f"{(info1.quality_score + info2.quality_score) / 2:.1f}"
+        similarities["quality_score"] = (
+            f"{(info1.quality_score + info2.quality_score) / 2:.1f}"
+        )
 
     # Try record-level comparison if possible
     record_comparison = _compare_records(analyzer1, analyzer2, max_records)
     if record_comparison:
-        comparison['record_comparison'] = record_comparison
+        comparison["record_comparison"] = record_comparison
 
-    comparison['differences'] = differences
-    comparison['similarities'] = similarities
+    comparison["differences"] = differences
+    comparison["similarities"] = similarities
 
     # Overall assessment
     if not differences:
-        comparison['assessment'] = 'files_appear_identical'
-    elif len(differences) == 1 and 'file_size' in differences:
-        comparison['assessment'] = 'size_difference_only'
+        comparison["assessment"] = "files_appear_identical"
+    elif len(differences) == 1 and "file_size" in differences:
+        comparison["assessment"] = "size_difference_only"
     elif len(differences) <= 2:
-        comparison['assessment'] = 'minor_differences'
+        comparison["assessment"] = "minor_differences"
     else:
-        comparison['assessment'] = 'significant_differences'
+        comparison["assessment"] = "significant_differences"
 
-    logger.info(f"Comparison complete: {len(differences)} differences, {len(similarities)} similarities")
+    logger.info(
+        f"Comparison complete: {len(differences)} differences, "
+        f"{len(similarities)} similarities"
+    )
     return comparison
 
 
-def _compare_records(analyzer1: BtrieveAnalyzer, analyzer2: BtrieveAnalyzer, max_records: int) -> Dict[str, Any]:
+def _compare_records(
+    analyzer1: BtrieveAnalyzer, analyzer2: BtrieveAnalyzer, max_records: int
+) -> Dict[str, Any]:
     """
     Compare records between two files if possible.
 
@@ -135,9 +144,9 @@ def _compare_records(analyzer1: BtrieveAnalyzer, analyzer2: BtrieveAnalyzer, max
 
         if record_size1 != record_size2:
             return {
-                'record_sizes_different': True,
-                'file1_record_size': record_size1,
-                'file2_record_size': record_size2
+                "record_sizes_different": True,
+                "file1_record_size": record_size1,
+                "file2_record_size": record_size2,
             }
 
         # Extract records for comparison
@@ -149,10 +158,10 @@ def _compare_records(analyzer1: BtrieveAnalyzer, analyzer2: BtrieveAnalyzer, max
 
         # Compare record counts
         record_comparison = {
-            'record_size': record_size1,
-            'records_compared': min(len(records1), len(records2), max_records),
-            'file1_record_count': len(records1),
-            'file2_record_count': len(records2)
+            "record_size": record_size1,
+            "records_compared": min(len(records1), len(records2), max_records),
+            "file1_record_count": len(records1),
+            "file2_record_count": len(records2),
         }
 
         # Compare actual record data
@@ -167,9 +176,11 @@ def _compare_records(analyzer1: BtrieveAnalyzer, analyzer2: BtrieveAnalyzer, max
                 matching_records += 1
 
         if total_compared > 0:
-            record_comparison['identical_records'] = matching_records
-            record_comparison['total_compared'] = total_compared
-            record_comparison['match_percentage'] = (matching_records / total_compared) * 100
+            record_comparison["identical_records"] = matching_records
+            record_comparison["total_compared"] = total_compared
+            record_comparison["match_percentage"] = (
+                matching_records / total_compared
+            ) * 100
 
         return record_comparison
 

@@ -32,7 +32,7 @@ def analyze_file(filepath: str, max_records: int = 100) -> BtrieveFileInfo:
         if record_size > 0:
             info.estimated_records = data_size // record_size
 
-    except Exception:
+    except (ValueError, ZeroDivisionError, AttributeError):
         # Record size detection failed, but we still have basic info
         pass
 

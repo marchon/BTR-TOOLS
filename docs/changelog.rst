@@ -6,6 +6,34 @@ All notable changes to BTR-TOOLS will be documented in this file.
 The format is based on `Keep a Changelog <https://keepachangelog.com/en/1.0.0/>`_,
 and this project adheres to `Semantic Versioning <https://semver.org/spec/v2.0.0.html>`_.
 
+[2.3.0] - 2026-02-07
+--------------------
+
+**Added**
+
+* Comprehensive code quality improvements and linting fixes
+* Enhanced type annotations throughout the codebase
+* Improved error handling and validation
+
+**Changed**
+
+* Refactored HTML template generation for better maintainability
+* Updated all f-string formatting for consistency and readability
+* Improved code structure and organization
+
+**Fixed**
+
+* Resolved all flake8 linting violations (100+ issues fixed)
+* Fixed syntax errors in f-string concatenations
+* Corrected long lines and formatting issues
+* Removed unused imports and variables
+* Fixed unnecessary f-strings and other code quality issues
+
+**Security**
+
+* Enhanced input validation and error handling
+* Improved security through better code practices
+
 [2.2.0] - 2026-02-07
 --------------------
 

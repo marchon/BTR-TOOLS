@@ -2,7 +2,8 @@
 BTR-TOOLS: Generic Btrieve File Analysis and Export Tools
 =========================================================
 
-A comprehensive toolkit for analyzing, extracting, and converting legacy Btrieve database files.
+A comprehensive toolkit for analyzing, extracting, and converting legacy
+Btrieve database files.
 
 This package provides command-line tools for:
 - Scanning directories for Btrieve files
@@ -14,6 +15,6 @@ This package provides command-line tools for:
 Based on successful reconstruction of dental practice Btrieve files.
 """
 
-__version__ = "1.0.0"
+__version__ = "2.3.0"
 __author__ = "BTR-TOOLS Team"
 __description__ = "Generic Btrieve file analysis and export toolkit"

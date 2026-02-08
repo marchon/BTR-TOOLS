@@ -3,7 +3,6 @@ Directory scanning functionality for Btrieve files.
 """
 
 import os
-from pathlib import Path
 from typing import List
 
 from btrtools.core.btrieve import BtrieveAnalyzer, BtrieveFileInfo
@@ -79,7 +78,7 @@ def _is_potential_btrieve_file(filepath: str) -> bool:
 
     # Check file extension (optional, but common)
     filename = os.path.basename(filepath).lower()
-    btrieve_extensions = ['.btr', '.dat', '.idx', '.key']
+    btrieve_extensions = [".btr", ".dat", ".idx", ".key"]
 
     # If it has a known Btrieve extension, it's likely a candidate
     if any(filename.endswith(ext) for ext in btrieve_extensions):
@@ -87,7 +86,7 @@ def _is_potential_btrieve_file(filepath: str) -> bool:
 
     # For files without extensions, check if size is multiple of page size
     # Btrieve files are often multiples of 4096 bytes (page size)
-    if '.' not in filename and file_size % 4096 == 0:
+    if "." not in filename and file_size % 4096 == 0:
         return True
 
     # For other files, we'll let the analyzer decide

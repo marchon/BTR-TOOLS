@@ -5,12 +5,11 @@ Comprehensive tests for BTR-TOOLS package.
 import os
 import tempfile
 import unittest
-import json
-from unittest.mock import patch, MagicMock
 from io import StringIO
+from unittest.mock import patch
 
 from btrtools.core.btrieve import BtrieveAnalyzer, BtrieveFileInfo
-from btrtools.utils.logging import logger, error_handler, BTRFileError, BTRDataError
+from btrtools.utils.logging import BTRDataError, BTRFileError, logger
 
 
 class TestBtrieveAnalyzer(unittest.TestCase):
@@ -19,7 +18,8 @@ class TestBtrieveAnalyzer(unittest.TestCase):
     def setUp(self):
         """Set up test fixtures."""
         # Create a mock Btrieve file for testing (4KB pages, 16-byte header)
-        self.test_data = b'ABCD' * 1024  # 4KB of test data
+        # Need at least 12KB for valid Btrieve file (2 FCR pages + 1 data page)
+        self.test_data = b"ABCD" * 3072  # 12KB of test data
         self.temp_file = tempfile.NamedTemporaryFile(delete=False)
         self.temp_file.write(self.test_data)
         self.temp_file.close()
@@ -44,11 +44,11 @@ class TestBtrieveAnalyzer(unittest.TestCase):
         """Test integrity checking."""
         result = self.analyzer.check_integrity()
 
-        self.assertTrue(result['file_exists'])
-        self.assertTrue(result['readable'])
-        self.assertTrue(result['valid_size'])
-        self.assertTrue(result['has_fcr_pages'])
-        self.assertFalse(result['corruption_detected'])
+        self.assertTrue(result["file_exists"])
+        self.assertTrue(result["readable"])
+        self.assertTrue(result["valid_size"])
+        self.assertTrue(result["has_fcr_pages"])
+        self.assertFalse(result["corruption_detected"])
 
     def test_content_analysis(self):
         """Test content pattern analysis."""
@@ -57,7 +57,7 @@ class TestBtrieveAnalyzer(unittest.TestCase):
         # Test data is all ASCII letters, so should have high ASCII percentage
         self.assertGreater(info.ascii_percentage, 90)
         self.assertEqual(info.digit_sequences, 0)  # No digits in test data
-        self.assertEqual(info.date_patterns, 0)    # No dates in test data
+        self.assertEqual(info.date_patterns, 0)  # No dates in test data
 
     def test_record_size_detection(self):
         """Test record size detection functionality."""
@@ -85,10 +85,11 @@ class TestLogging(unittest.TestCase):
 
     def test_error_handler(self):
         """Test error handler functionality."""
-        from btrtools.utils.logging import create_error_context
+        from btrtools.utils.logging import create_error_context, ErrorContext
+
         try:
             raise ValueError("Test error")
-        except ValueError as e:
+        except ValueError:
             context = create_error_context("test_operation", {"test": "args"})
             self.assertIsInstance(context, ErrorContext)
             self.assertEqual(context.command, "test_operation")
@@ -100,21 +101,25 @@ class TestCLI(unittest.TestCase):
     def test_cli_import(self):
         """Test that CLI modules can be imported."""
         try:
-            from btrtools.cli import analyze, export, check
-            # If we get here without exception, imports work
-            self.assertTrue(True)
+            from btrtools.cli import analyze, check, export
+
+            # Verify modules are imported successfully
+            self.assertIsNotNone(analyze)
+            self.assertIsNotNone(check)
+            self.assertIsNotNone(export)
         except ImportError as e:
             self.fail(f"CLI import failed: {e}")
 
-    @patch('sys.stdout', new_callable=StringIO)
+    @patch("sys.stdout", new_callable=StringIO)
     def test_cli_help_output(self, mock_stdout):
         """Test that CLI help can be displayed."""
         from btrtools.cli import main
-        with patch('sys.argv', ['btrtools', '--help']):
+
+        with patch("sys.argv", ["btrtools", "--help"]):
             with self.assertRaises(SystemExit):  # --help causes SystemExit
                 main()
         output = mock_stdout.getvalue()
-        self.assertIn('Btrieve File Analysis Toolkit', output)
+        self.assertIn("Btrieve File Analysis Toolkit", output)
 
 
 class TestExceptions(unittest.TestCase):
@@ -140,12 +145,12 @@ class TestIntegration(unittest.TestCase):
         """Create test file for integration tests."""
         # Create a more realistic test file with some structure
         self.test_data = (
-            b'BTRIEVE_HEADER' +  # 14 bytes
-            b'\x00' * 2 +        # Padding to 16 bytes
-            b'PAGE1_DATA' * 100 + # Page 1 content
-            b'PAGE2_DATA' * 100   # Page 2 content
+            b"BTRIEVE_HEADER"  # 14 bytes
+            + b"\x00" * 2  # Padding to 16 bytes
+            + b"PAGE1_DATA" * 100  # Page 1 content
+            + b"PAGE2_DATA" * 100  # Page 2 content
         )
-        self.temp_file = tempfile.NamedTemporaryFile(delete=False, suffix='.btr')
+        self.temp_file = tempfile.NamedTemporaryFile(delete=False, suffix=".btr")
         self.temp_file.write(self.test_data)
         self.temp_file.close()
 
@@ -164,7 +169,7 @@ class TestIntegration(unittest.TestCase):
 
         # Test integrity check
         integrity = analyzer.check_integrity()
-        self.assertTrue(integrity['file_exists'])
+        self.assertTrue(integrity["file_exists"])
 
         # Test record size detection
         try:
@@ -176,5 +181,5 @@ class TestIntegration(unittest.TestCase):
             pass
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

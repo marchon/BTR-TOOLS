@@ -4,9 +4,9 @@ Data export functionality for Btrieve files.
 
 import csv
 import json
-import sqlite3
 import os
-from typing import Optional, List
+import sqlite3
+from typing import List, Optional
 
 from btrtools.core.btrieve import BtrieveAnalyzer, BtrieveRecord
 
@@ -16,7 +16,7 @@ def export_file(
     format_type: str,
     record_size: Optional[int] = None,
     max_records: Optional[int] = None,
-    output_file: Optional[str] = None
+    output_file: Optional[str] = None,
 ) -> str:
     """
     Export Btrieve file data to the specified format.
@@ -48,27 +48,30 @@ def export_file(
     # Generate output filename if not provided
     if output_file is None:
         base_name = os.path.splitext(os.path.basename(filepath))[0]
-        if format_type == 'csv':
+        if format_type == "csv":
             output_file = f"{base_name}.csv"
-        elif format_type == 'jsonl':
+        elif format_type == "jsonl":
             output_file = f"{base_name}.jsonl"
-        elif format_type == 'sqlite':
+        elif format_type == "sqlite":
             output_file = f"{base_name}.db"
-        elif format_type == 'excel':
+        elif format_type == "excel":
             output_file = f"{base_name}.xlsx"
-        elif format_type == 'xml':
+        elif format_type == "xml":
             output_file = f"{base_name}.xml"
 
+    # Ensure output_file is not None
+    assert output_file is not None
+
     # Export based on format
-    if format_type == 'csv':
+    if format_type == "csv":
         _export_csv(records, output_file)
-    elif format_type == 'jsonl':
+    elif format_type == "jsonl":
         _export_jsonl(records, output_file)
-    elif format_type == 'sqlite':
+    elif format_type == "sqlite":
         _export_sqlite(records, output_file)
-    elif format_type == 'excel':
+    elif format_type == "excel":
         _export_excel(records, output_file)
-    elif format_type == 'xml':
+    elif format_type == "xml":
         _export_xml(records, output_file)
     else:
         raise ValueError(f"Unsupported format: {format_type}")
@@ -82,29 +85,33 @@ def _export_csv(records: List[BtrieveRecord], output_file: str) -> None:
         return
 
     # Collect all unique field names
-    field_names = set()
+    field_names: set[str] = set()
     for record in records:
         field_names.update(record.extracted_fields.keys())
 
     # Add standard fields
     standard_fields = [
-        'record_num', 'record_size', 'decoded_text',
-        'printable_chars', 'has_digits', 'has_alpha'
+        "record_num",
+        "record_size",
+        "decoded_text",
+        "printable_chars",
+        "has_digits",
+        "has_alpha",
     ]
     all_fields = standard_fields + sorted(list(field_names))
 
-    with open(output_file, 'w', newline='', encoding='utf-8') as f:
+    with open(output_file, "w", newline="", encoding="utf-8") as f:
         writer = csv.DictWriter(f, fieldnames=all_fields)
         writer.writeheader()
 
         for record in records:
             row = {
-                'record_num': record.record_num,
-                'record_size': record.record_size,
-                'decoded_text': record.decoded_text,
-                'printable_chars': record.printable_chars,
-                'has_digits': record.has_digits,
-                'has_alpha': record.has_alpha,
+                "record_num": record.record_num,
+                "record_size": record.record_size,
+                "decoded_text": record.decoded_text,
+                "printable_chars": record.printable_chars,
+                "has_digits": record.has_digits,
+                "has_alpha": record.has_alpha,
             }
             # Add extracted fields
             row.update(record.extracted_fields)
@@ -113,19 +120,19 @@ def _export_csv(records: List[BtrieveRecord], output_file: str) -> None:
 
 def _export_jsonl(records: List[BtrieveRecord], output_file: str) -> None:
     """Export records to JSON Lines format."""
-    with open(output_file, 'w', encoding='utf-8') as f:
+    with open(output_file, "w", encoding="utf-8") as f:
         for record in records:
             data = {
-                'record_num': record.record_num,
-                'record_size': record.record_size,
-                'raw_bytes': record.raw_bytes.hex(),
-                'decoded_text': record.decoded_text,
-                'printable_chars': record.printable_chars,
-                'has_digits': record.has_digits,
-                'has_alpha': record.has_alpha,
-                'extracted_fields': record.extracted_fields
+                "record_num": record.record_num,
+                "record_size": record.record_size,
+                "raw_bytes": record.raw_bytes.hex(),
+                "decoded_text": record.decoded_text,
+                "printable_chars": record.printable_chars,
+                "has_digits": record.has_digits,
+                "has_alpha": record.has_alpha,
+                "extracted_fields": record.extracted_fields,
             }
-            f.write(json.dumps(data, ensure_ascii=False) + '\n')
+            f.write(json.dumps(data, ensure_ascii=False) + "\n")
 
 
 def _export_sqlite(records: List[BtrieveRecord], output_file: str) -> None:
@@ -134,33 +141,33 @@ def _export_sqlite(records: List[BtrieveRecord], output_file: str) -> None:
         return
 
     # Collect all unique field names for table creation
-    field_names = set()
+    field_names: set[str] = set()
     for record in records:
         field_names.update(record.extracted_fields.keys())
 
     # Create table schema
     standard_fields = [
-        ('record_num', 'INTEGER'),
-        ('record_size', 'INTEGER'),
-        ('raw_bytes', 'TEXT'),
-        ('decoded_text', 'TEXT'),
-        ('printable_chars', 'INTEGER'),
-        ('has_digits', 'BOOLEAN'),
-        ('has_alpha', 'BOOLEAN')
+        ("record_num", "INTEGER"),
+        ("record_size", "INTEGER"),
+        ("raw_bytes", "TEXT"),
+        ("decoded_text", "TEXT"),
+        ("printable_chars", "INTEGER"),
+        ("has_digits", "BOOLEAN"),
+        ("has_alpha", "BOOLEAN"),
     ]
 
     # Add extracted fields (all as TEXT for flexibility)
-    extracted_fields = [(name, 'TEXT') for name in sorted(field_names)]
+    extracted_fields = [(name, "TEXT") for name in sorted(field_names)]
 
     all_fields = standard_fields + extracted_fields
 
     # Create table SQL
-    columns_sql = ', '.join(f'"{name}" {type_}' for name, type_ in all_fields)
-    create_table_sql = f'CREATE TABLE btrieve_records ({columns_sql})'
+    columns_sql = ", ".join(f'"{name}" {type_}' for name, type_ in all_fields)
+    create_table_sql = f"CREATE TABLE btrieve_records ({columns_sql})"
 
     # Insert SQL
-    placeholders = ', '.join('?' for _ in all_fields)
-    insert_sql = f'INSERT INTO btrieve_records VALUES ({placeholders})'
+    placeholders = ", ".join("?" for _ in all_fields)
+    insert_sql = f"INSERT INTO btrieve_records VALUES ({placeholders})"  # nosec B608
 
     conn = sqlite3.connect(output_file)
     try:
@@ -183,7 +190,7 @@ def _export_sqlite(records: List[BtrieveRecord], output_file: str) -> None:
 
             # Add extracted field values
             for field_name, _ in extracted_fields:
-                values.append(record.extracted_fields.get(field_name, ''))
+                values.append(record.extracted_fields.get(field_name, ""))
 
             cursor.execute(insert_sql, values)
 
@@ -199,7 +206,9 @@ def _export_excel(records: List[BtrieveRecord], output_file: str) -> None:
         from openpyxl import Workbook
         from openpyxl.styles import Font
     except ImportError:
-        raise ImportError("openpyxl is required for Excel export. Install with: pip install openpyxl")
+        raise ImportError(
+            "openpyxl is required for Excel export. Install with: pip install openpyxl"
+        )
 
     if not records:
         return
@@ -210,14 +219,19 @@ def _export_excel(records: List[BtrieveRecord], output_file: str) -> None:
     ws.title = "Btrieve Records"
 
     # Collect all unique field names
-    field_names = set()
+    field_names: set[str] = set()
     for record in records:
         field_names.update(record.extracted_fields.keys())
 
     # Add standard fields
     standard_fields = [
-        'record_num', 'record_size', 'raw_bytes', 'decoded_text',
-        'printable_chars', 'has_digits', 'has_alpha'
+        "record_num",
+        "record_size",
+        "raw_bytes",
+        "decoded_text",
+        "printable_chars",
+        "has_digits",
+        "has_alpha",
     ]
     all_fields = standard_fields + sorted(list(field_names))
 
@@ -240,8 +254,12 @@ def _export_excel(records: List[BtrieveRecord], output_file: str) -> None:
 
         # Extracted fields
         col_offset = len(standard_fields)
-        for i, field_name in enumerate(sorted(record.extracted_fields.keys()), col_offset):
-            ws.cell(row=row_num, column=i+1, value=record.extracted_fields[field_name])
+        for i, field_name in enumerate(
+            sorted(record.extracted_fields.keys()), col_offset
+        ):
+            ws.cell(
+                row=row_num, column=i + 1, value=record.extracted_fields[field_name]
+            )
 
     # Auto-adjust column widths
     for col_num, column in enumerate(ws.columns, 1):
@@ -252,7 +270,7 @@ def _export_excel(records: List[BtrieveRecord], output_file: str) -> None:
             try:
                 if len(str(cell.value)) > max_length:
                     max_length = len(str(cell.value))
-            except:
+            except (AttributeError, TypeError):
                 pass
 
         adjusted_width = min(max_length + 2, 50)  # Cap at 50 characters
@@ -265,8 +283,8 @@ def _export_excel(records: List[BtrieveRecord], output_file: str) -> None:
 def _export_xml(records: List[BtrieveRecord], output_file: str) -> None:
     """Export records to XML format."""
     try:
+        import defusedxml.minidom as minidom
         from xml.etree.ElementTree import Element, SubElement, tostring
-        from xml.dom import minidom
     except ImportError:
         # xml.etree is part of standard library, so this shouldn't happen
         raise ImportError("XML support is not available")
@@ -275,36 +293,36 @@ def _export_xml(records: List[BtrieveRecord], output_file: str) -> None:
         return
 
     # Create root element
-    root = Element('btrieve_records')
+    root = Element("btrieve_records")
 
     for record in records:
-        record_elem = SubElement(root, 'record')
-        record_elem.set('number', str(record.record_num))
-        record_elem.set('size', str(record.record_size))
+        record_elem = SubElement(root, "record")
+        record_elem.set("number", str(record.record_num))
+        record_elem.set("size", str(record.record_size))
 
         # Add standard fields
-        SubElement(record_elem, 'raw_bytes').text = record.raw_bytes.hex()
-        SubElement(record_elem, 'decoded_text').text = record.decoded_text
-        SubElement(record_elem, 'printable_chars').text = str(record.printable_chars)
-        SubElement(record_elem, 'has_digits').text = str(record.has_digits)
-        SubElement(record_elem, 'has_alpha').text = str(record.has_alpha)
+        SubElement(record_elem, "raw_bytes").text = record.raw_bytes.hex()
+        SubElement(record_elem, "decoded_text").text = record.decoded_text
+        SubElement(record_elem, "printable_chars").text = str(record.printable_chars)
+        SubElement(record_elem, "has_digits").text = str(record.has_digits)
+        SubElement(record_elem, "has_alpha").text = str(record.has_alpha)
 
         # Add extracted fields
         if record.extracted_fields:
-            fields_elem = SubElement(record_elem, 'extracted_fields')
+            fields_elem = SubElement(record_elem, "extracted_fields")
             for field_name, field_value in record.extracted_fields.items():
-                field_elem = SubElement(fields_elem, 'field')
-                field_elem.set('name', field_name)
+                field_elem = SubElement(fields_elem, "field")
+                field_elem.set("name", field_name)
                 field_elem.text = str(field_value)
 
     # Pretty print XML
-    rough_string = tostring(root, encoding='unicode')
+    rough_string = tostring(root, encoding="unicode")
     reparsed = minidom.parseString(rough_string)
     pretty_xml = reparsed.toprettyxml(indent="  ")
 
     # Remove extra whitespace
-    lines = [line for line in pretty_xml.split('\n') if line.strip()]
-    clean_xml = '\n'.join(lines)
+    lines = [line for line in pretty_xml.split("\n") if line.strip()]
+    clean_xml = "\n".join(lines)
 
-    with open(output_file, 'w', encoding='utf-8') as f:
+    with open(output_file, "w", encoding="utf-8") as f:
         f.write(clean_xml)

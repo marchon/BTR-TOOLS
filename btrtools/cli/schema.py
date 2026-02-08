@@ -2,16 +2,13 @@
 Schema detection functionality for Btrieve files.
 """
 
-from typing import Dict, List, Any, Optional
-import re
+from typing import Any, Dict, List, Optional
 
 from btrtools.core.btrieve import BtrieveAnalyzer, BtrieveRecord
 
 
 def detect_schema(
-    filepath: str,
-    record_size: Optional[int] = None,
-    max_records: int = 1000
+    filepath: str, record_size: Optional[int] = None, max_records: int = 1000
 ) -> Dict[str, Any]:
     """
     Detect schema information from a Btrieve file.
@@ -36,11 +33,7 @@ def detect_schema(
     records = analyzer.extract_records(record_size, max_records)
 
     if not records:
-        return {
-            'record_size': record_size,
-            'records_analyzed': 0,
-            'fields': []
-        }
+        return {"record_size": record_size, "records_analyzed": 0, "fields": []}
 
     # Analyze field patterns
     field_patterns = _analyze_field_patterns(records)
@@ -49,9 +42,9 @@ def detect_schema(
     detected_fields = _detect_fields(field_patterns, record_size)
 
     return {
-        'record_size': record_size,
-        'records_analyzed': len(records),
-        'fields': detected_fields
+        "record_size": record_size,
+        "records_analyzed": len(records),
+        "fields": detected_fields,
     }
 
 
@@ -65,19 +58,19 @@ def _analyze_field_patterns(records: List[BtrieveRecord]) -> Dict[int, Dict[str,
         return {}
 
     record_size = records[0].record_size
-    position_stats = {}
+    position_stats: Dict[int, Dict[str, Any]] = {}
 
     # Initialize position statistics
     for pos in range(record_size):
         position_stats[pos] = {
-            'ascii_count': 0,
-            'digit_count': 0,
-            'alpha_count': 0,
-            'space_count': 0,
-            'null_count': 0,
-            'printable_count': 0,
-            'total_records': len(records),
-            'unique_chars': set()
+            "ascii_count": 0,
+            "digit_count": 0,
+            "alpha_count": 0,
+            "space_count": 0,
+            "null_count": 0,
+            "printable_count": 0,
+            "total_records": len(records),
+            "unique_chars": set(),
         }
 
     # Analyze each position across all records
@@ -89,26 +82,25 @@ def _analyze_field_patterns(records: List[BtrieveRecord]) -> Dict[int, Dict[str,
                 break
 
             stats = position_stats[pos]
-            stats['unique_chars'].add(char)
+            stats["unique_chars"].add(char)
 
-            if char == '\x00' or char == '\0':
-                stats['null_count'] += 1
+            if char == "\x00" or char == "\0":
+                stats["null_count"] += 1
             elif char.isdigit():
-                stats['digit_count'] += 1
+                stats["digit_count"] += 1
             elif char.isalpha():
-                stats['alpha_count'] += 1
+                stats["alpha_count"] += 1
             elif char.isspace():
-                stats['space_count'] += 1
+                stats["space_count"] += 1
             elif char.isprintable():
-                stats['printable_count'] += 1
-                stats['ascii_count'] += 1
+                stats["printable_count"] += 1
+                stats["ascii_count"] += 1
 
     return position_stats
 
 
 def _detect_fields(
-    position_stats: Dict[int, Dict[str, Any]],
-    record_size: int
+    position_stats: Dict[int, Dict[str, Any]], record_size: int
 ) -> List[Dict[str, Any]]:
     """
     Detect field boundaries and types from position statistics.
@@ -122,35 +114,35 @@ def _detect_fields(
             continue
 
         stats = position_stats[pos]
-        total_records = stats['total_records']
+        total_records = stats["total_records"]
 
         # Calculate percentages
-        ascii_percent = (stats['ascii_count'] / total_records) * 100
-        digit_percent = (stats['digit_count'] / total_records) * 100
-        alpha_percent = (stats['alpha_count'] / total_records) * 100
-        null_percent = (stats['null_count'] / total_records) * 100
+        ascii_percent = (stats["ascii_count"] / total_records) * 100
+        digit_percent = (stats["digit_count"] / total_records) * 100
+        alpha_percent = (stats["alpha_count"] / total_records) * 100
+        null_percent = (stats["null_count"] / total_records) * 100
 
         # Determine position type
         if null_percent > 80:
-            pos_type = 'null_padding'
+            pos_type = "null_padding"
         elif digit_percent > 70:
-            pos_type = 'digits'
+            pos_type = "digits"
         elif alpha_percent > 50:
-            pos_type = 'alpha'
+            pos_type = "alpha"
         elif ascii_percent > 50:
-            pos_type = 'text'
+            pos_type = "text"
         else:
-            pos_type = 'mixed'
+            pos_type = "mixed"
 
         # Field boundary detection
         if current_field_start is None:
             # Start new field
-            if pos_type != 'null_padding':
+            if pos_type != "null_padding":
                 current_field_start = pos
                 current_field_type = pos_type
         else:
             # Check if we should end current field
-            if pos_type == 'null_padding' or pos_type != current_field_type:
+            if pos_type == "null_padding" or pos_type != current_field_type:
                 # End current field
                 field_length = pos - current_field_start
                 if field_length > 0:
@@ -158,13 +150,13 @@ def _detect_fields(
                         current_field_start,
                         field_length,
                         current_field_type,
-                        position_stats
+                        position_stats,
                     )
                     if field_info:
                         fields.append(field_info)
 
                 # Start new field if not null padding
-                if pos_type != 'null_padding':
+                if pos_type != "null_padding":
                     current_field_start = pos
                     current_field_type = pos_type
                 else:
@@ -176,10 +168,7 @@ def _detect_fields(
         field_length = record_size - current_field_start
         if field_length > 0:
             field_info = _create_field_info(
-                current_field_start,
-                field_length,
-                current_field_type,
-                position_stats
+                current_field_start, field_length, current_field_type, position_stats
             )
             if field_info:
                 fields.append(field_info)
@@ -190,13 +179,13 @@ def _detect_fields(
 def _create_field_info(
     start_pos: int,
     length: int,
-    field_type: str,
-    position_stats: Dict[int, Dict[str, Any]]
+    field_type: Optional[str],
+    position_stats: Dict[int, Dict[str, Any]],
 ) -> Optional[Dict[str, Any]]:
     """
     Create field information dictionary.
     """
-    if length < 1:
+    if length < 1 or field_type is None:
         return None
 
     # Analyze the field across its positions
@@ -209,11 +198,11 @@ def _create_field_info(
     for pos in range(start_pos, start_pos + length):
         if pos in position_stats:
             stats = position_stats[pos]
-            total_records = stats['total_records']
-            total_ascii += stats['ascii_count']
-            total_digits += stats['digit_count']
-            total_alpha += stats['alpha_count']
-            unique_chars.update(stats['unique_chars'])
+            total_records = stats["total_records"]
+            total_ascii += stats["ascii_count"]
+            total_digits += stats["digit_count"]
+            total_alpha += stats["alpha_count"]
+            unique_chars.update(stats["unique_chars"])
 
     if total_records == 0:
         return None
@@ -224,51 +213,48 @@ def _create_field_info(
     )
 
     return {
-        'name': field_name,
-        'type': field_type_detailed,
-        'position': start_pos,
-        'length': length,
-        'ascii_percent': (total_ascii / (total_records * length)) * 100,
-        'digit_percent': (total_digits / (total_records * length)) * 100,
-        'alpha_percent': (total_alpha / (total_records * length)) * 100
+        "name": field_name,
+        "type": field_type_detailed,
+        "position": start_pos,
+        "length": length,
+        "ascii_percent": (total_ascii / (total_records * length)) * 100,
+        "digit_percent": (total_digits / (total_records * length)) * 100,
+        "alpha_percent": (total_alpha / (total_records * length)) * 100,
     }
 
 
 def _infer_field_type_and_name(
-    field_type: str,
-    length: int,
-    unique_chars: set,
-    avg_digits: float
+    field_type: str, length: int, unique_chars: set, avg_digits: float
 ) -> tuple[str, str]:
     """
     Infer field type and generate a descriptive name.
     """
     # Common field patterns based on dental project experience
-    if field_type == 'digits':
+    if field_type == "digits":
         if length == 5 and avg_digits > 0.8:
-            return 'zip_code', 'ZIP_CODE'
+            return "zip_code", "ZIP_CODE"
         elif length >= 10 and avg_digits > 0.9:
-            return 'phone_number', 'PHONE'
-        elif length == 4 and all(c.isdigit() or c in 'D' for c in unique_chars):
-            return 'procedure_code', 'PROCEDURE_CODE'
+            return "phone_number", "PHONE"
+        elif length == 4 and all(c.isdigit() or c in "D" for c in unique_chars):
+            return "procedure_code", "PROCEDURE_CODE"
         else:
-            return f'digit_field_{length}', 'DIGITS'
+            return f"digit_field_{length}", "DIGITS"
 
-    elif field_type == 'alpha':
+    elif field_type == "alpha":
         if length == 2 and all(len(c) == 1 and c.isalpha() for c in unique_chars):
-            return 'state_code', 'STATE'
+            return "state_code", "STATE"
         elif length <= 4 and all(len(c) == 1 and c.isupper() for c in unique_chars):
-            return 'provider_code', 'PROVIDER_CODE'
+            return "provider_code", "PROVIDER_CODE"
         else:
-            return f'alpha_field_{length}', 'ALPHA'
+            return f"alpha_field_{length}", "ALPHA"
 
-    elif field_type == 'text':
+    elif field_type == "text":
         if length > 50:
-            return 'description', 'TEXT'
+            return "description", "TEXT"
         elif length > 20:
-            return 'address', 'ADDRESS'
+            return "address", "ADDRESS"
         else:
-            return f'text_field_{length}', 'TEXT'
+            return f"text_field_{length}", "TEXT"
 
     else:
-        return f'field_{length}', 'MIXED'
+        return f"field_{length}", "MIXED"

@@ -6,8 +6,8 @@
 project = 'BTR-TOOLS'
 copyright = '2026, Btrieve Analysis Team'
 author = 'Btrieve Analysis Team'
-release = '2.0.0'
-version = '2.0.0'
+release = '2.3.0'
+version = '2.3.0'
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration

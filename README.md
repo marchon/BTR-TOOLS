@@ -239,7 +239,7 @@ btrtools -P scan /data --recursive
 
 ```
 BTR-TOOLS - Btrieve File Analysis Toolkit
-Version 2.0.0 | Rich output enabled
+Version 2.3.0 | Rich output enabled
 ⠋ Reading file structure... ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 100% 0:00:00
 
     Btrieve File Analysis Results    
